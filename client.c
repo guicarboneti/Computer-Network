@@ -19,11 +19,13 @@ int main() {
         return 1;
     }
 
-    chdir(HOME);
+    chdir(HOMECLIENT);
 
     char command[100];
     while (1) {
         scanf("%s", command);
+
+        t_message * newMessage = malloc(sizeof(t_message));
 
         if (!strcmp(command, "lcd")) {
             printf("Fazer lcd\n");

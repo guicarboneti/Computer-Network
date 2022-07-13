@@ -2,11 +2,19 @@
 #define HOMESERVER "/home/leon"
 
 #define STARTMARKER 126
-#define CD 6
+#define RCD 6
 #define OK 1
 #define NACK 2
 #define ERROR 17
-#define LS 7
+#define RLS 7
+#define PRINT 63
+#define ACK 3
+#define END 46
+#define RMKDIR 8
+#define GET 9
+#define FILEDESC 24
+#define DATA 32
+#define PUT 10
 
 typedef struct {
     unsigned char marker:8;
@@ -15,4 +23,4 @@ typedef struct {
     unsigned char type:6;
     unsigned char * data;
     unsigned char parity:8;
-} t_message
+} t_message;

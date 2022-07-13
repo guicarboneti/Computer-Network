@@ -18,7 +18,7 @@ int main() {
         return 1;
     }
 
-    chdir(HOME);
+    chdir(HOMESERVER);
 
     while (1) {
         unsigned char *buff = malloc(100 * sizeof(char));

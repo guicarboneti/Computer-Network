@@ -9,7 +9,7 @@
 
 #include "ConexaoRawSocket.h"
 
-#include "dataStructures.h"
+#include "types.h"
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");

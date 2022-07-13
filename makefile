@@ -12,7 +12,7 @@ server: server.c $(object)
 	gcc server.c -o server $(objects) 
 
 ConexaoRawSocket.o: ConexaoRawSocket.c ConexaoRawSocket.h
-	gcc ConexaoRawSocket.c -c ConexaoRawSocket.o 
+	gcc ConexaoRawSocket.c -c
 
 purge: clean
 	-rm -f client server

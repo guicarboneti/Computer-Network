@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -20,6 +21,7 @@ int main() {
 
     chdir(HOMESERVER);
 
+    printf("Escutando...\n");
     while (1) {
         unsigned char *buff = malloc(100 * sizeof(char));
         int buflen=recv(mySocket, buff, 100, 0);

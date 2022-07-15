@@ -10,8 +10,7 @@
 #include "ConexaoRawSocket.h"
 
 #include "types.h"
-
-#define CMDREADSIZE 200
+#include "utils.h"
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");
@@ -23,16 +22,19 @@ int main() {
 
     chdir(HOMECLIENT);
 
-    char command[CMDREADSIZE];
+    char command[100];
+    char c;
+    printf("Enviando...\n");
+
+
     while (1) {
-        scanf("%[^\n]", command);
+        scanf("%[^\n]%c", command, &c);
 
         t_message *newMessage = malloc(sizeof(t_message));
         t_command *newCommand = malloc(sizeof(t_command));
 
         newCommand = getCommand(command);
 
-        /*
         if (!strcmp(newCommand->cmd, "lcd")) {
             printf("Fazer lcd\n");
             int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
@@ -92,7 +94,6 @@ int main() {
         else {
             printf("Erro: comando desconhecido!\n");
         }
-        */
     }
-    
-}
+
+} 

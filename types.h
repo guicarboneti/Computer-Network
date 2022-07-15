@@ -1,3 +1,6 @@
+#ifndef __TYPES__
+#define __TYPES__
+
 #define HOMECLIENT "/home/leon"
 #define HOMESERVER "/home/leon"
 
@@ -33,3 +36,5 @@ typedef struct {
     char **args;
     int numArgs;
 } t_command;
+
+#endif

@@ -7,6 +7,6 @@
 
 #include "types.h"
 
-t_command *getCommand(char *text);
+t_command *buildCommand(char *text);
 
 #endif

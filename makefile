@@ -1,7 +1,7 @@
 # Leon e Guilherme
 
 # object-file
-objects = ConexaoRawSocket.o utils.o
+objects = ConexaoRawSocket.o utils.o messages.o
 
 all: client server
 
@@ -16,6 +16,9 @@ ConexaoRawSocket.o: ConexaoRawSocket.c ConexaoRawSocket.h
 
 utils.o: utils.c utils.h
 	gcc utils.c -c
+
+messages.o: messages.c messages.h
+	gcc messages.c -c
 
 purge: clean
 	-rm -f client server

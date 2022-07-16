@@ -1,6 +1,6 @@
 #include "utils.h"
 
-t_command *getCommand(char *text) {
+t_command *buildCommand(char *text) {
     t_command *newCommand = malloc(sizeof(t_command));
     newCommand->numArgs = 0;
     newCommand->args = (char **)calloc(10, sizeof(unsigned char*));;

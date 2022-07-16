@@ -11,6 +11,7 @@
 
 #include "types.h"
 #include "utils.h"
+#include "messages.h"
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");
@@ -24,54 +25,47 @@ int main() {
 
     char command[100];
     char c;
+    int sequence = 1;
     printf("Enviando...\n");
 
 
     while (1) {
         scanf("%[^\n]%c", command, &c);
-
-        t_message *newMessage = malloc(sizeof(t_message));
-        t_command *newCommand = malloc(sizeof(t_command));
-
-        newCommand = getCommand(command);
+        t_command *newCommand = buildCommand(command);
 
         if (!strcmp(newCommand->cmd, "lcd")) {
             printf("Fazer lcd\n");
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
-            }
         }
         else if (!strcmp(newCommand->cmd, "lls")) {
             printf("Fazer lls\n");
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
-            }
         }
         else if (!strcmp(newCommand->cmd, "rcd")) {
-            printf("Fazer rcd\n");
+            t_message *newMessage = buildMessage(newCommand, sequence, RCD);
+
             int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
         }
         else if (!strcmp(newCommand->cmd, "rls")) {
-            printf("Fazer rls\n");
+            t_message *newMessage = buildMessage(newCommand, sequence, RLS);
+
             int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
         }
         else if (!strcmp(newCommand->cmd, "get")) {
-            printf("Fazer get\n");
+            t_message *newMessage = buildMessage(newCommand, sequence, GET);
+
             int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
         }
         else if (!strcmp(newCommand->cmd, "put")) {
-            printf("Fazer put\n");
+            t_message *newMessage = buildMessage(newCommand, sequence, PUT);
+
             int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
@@ -79,13 +73,10 @@ int main() {
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             printf("Fazer lmkdir\n");
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
-            }
         }
         else if (!strcmp(newCommand->cmd, "rmkdir")) {
-            printf("Fazer rmkdir\n");
+            t_message *newMessage = buildMessage(newCommand, sequence, RMKDIR);
+
             int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");

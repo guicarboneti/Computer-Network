@@ -11,6 +11,9 @@
 #include "ConexaoRawSocket.h"
 
 #include "types.h"
+#include "messages.h"
+
+int expected = 0;
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");
@@ -23,15 +26,9 @@ int main() {
 
     printf("Escutando...\n");
     while (1) {
-        unsigned char *buff = malloc(100 * sizeof(char));
-        int buflen=recv(mySocket, buff, 100, 0);
+        
+        t_message *receivedMessage = receiveMessage(mySocket, expected);
 
-        if (buflen<0) {
-            printf("Erro ao receber dados do socket.\n");
-        }
-        else {
-            printf("%s\n", buff);
-        }
-
+        expected++;
     }
 }

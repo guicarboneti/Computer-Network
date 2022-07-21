@@ -29,6 +29,6 @@ int main() {
         
         t_message *receivedMessage = receiveMessage(mySocket, expected);
 
-        expected++;
+        //expected++;
     }
 }

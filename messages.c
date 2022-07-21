@@ -81,20 +81,21 @@ t_message *receiveMessage(int socket, int expected) {
 
     // check parity
 
+    printMessage(newMessage);
     return newMessage;
 
 }
 
 int sendMessage(int socket, t_message *message) {
     //int sentLen = send(socket, message, sizeof(message)+100, 0);
-    char *buffer = malloc(4 + sizeof(message->data));
+    char *buffer = malloc(5 + message->header.size);
 
     // copies header to buffer (it occupies 3 bytes)
     buffer = memcpy(buffer, &message->header, 4);
 
     // copies data to buffer
     int i;
-    for (i = 4; i < sizeof(message->data) + 4; i++)
+    for (i = 4; i < message->header.size + 4; i++)
         buffer[i] = message->data[i-4];
     
     buffer[i] = message->parity;

@@ -86,5 +86,6 @@ int main() {
             printf("Erro: comando desconhecido!\n");
         }
     }
+    sequence++;
 
 } 

@@ -42,7 +42,7 @@ int main() {
         else if (!strcmp(newCommand->cmd, "rcd")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RCD);
 
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
+            int send_len = sendMessage(mySocket, newMessage);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
@@ -50,7 +50,7 @@ int main() {
         else if (!strcmp(newCommand->cmd, "rls")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RLS);
 
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
+            int send_len = sendMessage(mySocket, newMessage);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
@@ -58,7 +58,7 @@ int main() {
         else if (!strcmp(newCommand->cmd, "get")) {
             t_message *newMessage = buildMessage(newCommand, sequence, GET);
 
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
+            int send_len = sendMessage(mySocket, newMessage);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
@@ -66,7 +66,7 @@ int main() {
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
 
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
+            int send_len = sendMessage(mySocket, newMessage);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
@@ -77,7 +77,7 @@ int main() {
         else if (!strcmp(newCommand->cmd, "rmkdir")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RMKDIR);
 
-            int send_len = send(mySocket, newCommand->cmd, sizeof(command), 0);
+            int send_len = sendMessage(mySocket, newMessage);
             if(send_len < 0){
                 printf("Erro ao enviar dados para socket.\n");
             }
@@ -86,5 +86,6 @@ int main() {
             printf("Erro: comando desconhecido!\n");
         }
     }
+    sequence++;
 
 } 

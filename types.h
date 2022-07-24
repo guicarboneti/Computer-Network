@@ -27,6 +27,10 @@ typedef struct {
     unsigned char size:6;
     unsigned char sequence:4;
     unsigned char type:6;
+} t_header_message;
+
+typedef struct {
+    t_header_message header;
     unsigned char *data;
     unsigned char parity:8;
 } t_message;

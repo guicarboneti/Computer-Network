@@ -13,8 +13,12 @@ void printMessage(t_message *message);
 
 t_message *buildMessage(t_command *command, int sequence, int cmdCode);
 
-t_message *receiveMessage(int socket, int expected);
+t_message *receiveMessage(int socket);
 
 int sendMessage(int socket, t_message *message);
+
+int sendNack(int socket, t_message *message);
+
+char awaitServerResponse(int socket, char *errorCode, int sequence);
 
 #endif

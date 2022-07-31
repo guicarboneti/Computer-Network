@@ -12,7 +12,7 @@ void printMessage(t_message *message) {
 t_message *buildMessage(t_command *command, int sequence, int cmdCode) {
     t_message *newMessage = malloc(sizeof(t_message));
     newMessage->header.marker = STARTMARKER;
-    newMessage->header.sequence = sequence - 1;
+    newMessage->header.sequence = sequence;
     newMessage->header.type = cmdCode;
 
     newMessage->data = calloc(2, sizeof(char));
@@ -47,7 +47,7 @@ t_message *buildMessage(t_command *command, int sequence, int cmdCode) {
     return newMessage;
 }
 
-t_message *receiveMessage(int socket, int expected) {
+t_message *receiveMessage(int socket) {
     t_message *newMessage = malloc(sizeof(t_message));
 
     // maximum size of message
@@ -71,17 +71,12 @@ t_message *receiveMessage(int socket, int expected) {
 
     newMessage->parity = buffer[i+4];
 
-    // in case received doubly messages
-    if (newMessage->header.sequence < expected) {
-        free(buffer);
-        return receiveMessage(socket, expected);
-    }
-
     // treat bigger than expected
 
     // check parity
 
-    printMessage(newMessage);
+
+    free(buffer);
     return newMessage;
 
 }
@@ -105,4 +100,27 @@ int sendMessage(int socket, t_message *message) {
 
     free(buffer);
     return sendLen;
+}
+
+int sendNack(int socket, t_message *message) {
+    message->header.type = NACK;
+    return sendMessage(socket, message);
+}
+
+char awaitServerResponse(int socket, char *errorCode, int sequence) {
+    /* set timeout */
+    struct timeval tv;
+	tv.tv_sec = 20;
+	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(struct timeval *)&tv,sizeof(struct timeval));
+
+	while(1) {
+		t_message *response = receiveMessage(socket);
+        if (response != NULL) {
+            if (response->header.marker == STARTMARKER && response->header.sequence == sequence && ((response->header.type == ACK) || (response->header.type == OK) || (response->header.type == ERROR))) {
+                if (response->header.size > 0)
+                    *errorCode = response->data[0];
+                return response->header.type;
+            }
+        }
+	}
 }

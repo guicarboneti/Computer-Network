@@ -1,4 +1,5 @@
 #include "messages.h"
+#include "utils.h"
 
 void printMessage(t_message *message) {
     printf("marcador: %d\n", (int)message->header.marker);
@@ -53,6 +54,12 @@ t_message *receiveMessage(int socket) {
     // maximum size of message
     char *buffer = malloc(70);
 
+
+    struct timeval tv;
+    tv.tv_sec = 20;
+    tv.tv_usec = 0;
+    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+    
     int buflen = recv(socket, buffer, 70, 0);
     if (buflen < 0) {
         printf("Erro ao receber dados\n");
@@ -108,12 +115,9 @@ int sendNack(int socket, t_message *message) {
 }
 
 char awaitServerResponse(int socket, char *errorCode, int sequence) {
-    /* set timeout */
-    struct timeval tv;
-	tv.tv_sec = 20;
-	setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO,(struct timeval *)&tv,sizeof(struct timeval));
-
-	while(1) {
+    double time = 0;
+    double startTimestamp = timestamp();
+	while(time <= 20000) {
 		t_message *response = receiveMessage(socket);
         if (response != NULL) {
             if (response->header.marker == STARTMARKER && response->header.sequence == sequence && ((response->header.type == ACK) || (response->header.type == OK) || (response->header.type == ERROR))) {
@@ -122,5 +126,7 @@ char awaitServerResponse(int socket, char *errorCode, int sequence) {
                 return response->header.type;
             }
         }
+        time += timestamp() - startTimestamp;
 	}
+    return TIMEOUT;
 }

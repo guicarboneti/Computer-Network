@@ -20,6 +20,8 @@
 #define DATA 32
 #define PUT 10
 
+#define TIMEOUT 42
+
 #define END 46
 
 typedef struct {

@@ -52,12 +52,17 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
-            printf("Mensagem recebida: %d\n", (int)response);
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
+                sequence++;
             }
-            sequence++;
+            else if ((response == ACK) || (response == OK)) {
+                printf("Ok!\n");
+                sequence++;
+            }
+            else if (response == TIMEOUT)
+                printf("Timeout! Tente novamente\n");
         }
 
         else if (!strcmp(newCommand->cmd, "rls")) {
@@ -71,12 +76,17 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
-            printf("Mensagem recebida: %d\n", (int)response);
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
+                sequence++;
             }
-            sequence++;
+            else if ((response == ACK) || (response == OK)) {
+                printf("Ok!\n");
+                sequence++;
+            }
+            else if (response == TIMEOUT)
+                printf("Timeout! Tente novamente\n");
         }
         else if (!strcmp(newCommand->cmd, "get")) {
             t_message *newMessage = buildMessage(newCommand, sequence, GET);
@@ -89,12 +99,17 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
-            printf("Mensagem recebida: %d\n", (int)response);
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
+                sequence++;
             }
-            sequence++;
+            else if ((response == ACK) || (response == OK)) {
+                printf("Ok!\n");
+                sequence++;
+            }
+            else if (response == TIMEOUT)
+                printf("Timeout! Tente novamente\n");
         }
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
@@ -107,12 +122,17 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
-            printf("Mensagem recebida: %d\n", (int)response);
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
+                sequence++;
             }
-            sequence++;
+            else if ((response == ACK) || (response == OK)) {
+                printf("Ok!\n");
+                sequence++;
+            }
+            else if (response == TIMEOUT)
+                printf("Timeout! Tente novamente\n");
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             printf("Fazer lmkdir\n");
@@ -128,12 +148,17 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
-            printf("Mensagem recebida: %d\n", (int)response);
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
+                sequence++;
             }
-            sequence++;
+            else if ((response == ACK) || (response == OK)) {
+                printf("Ok!\n");
+                sequence++;
+            }
+            else if (response == TIMEOUT)
+                printf("Timeout! Tente novamente\n");
         }
         else {
             printf("Erro: comando desconhecido!\n");

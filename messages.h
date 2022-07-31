@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include<sys/types.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
 void printMessage(t_message *message);
 

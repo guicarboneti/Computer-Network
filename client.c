@@ -24,8 +24,8 @@ int main() {
     chdir(HOMECLIENT);
 
     char command[100];
-    char c;
-    int sequence = 1;
+    char c, errorCode;
+    int sequence = 0;
     printf("Enviando...\n");
 
 
@@ -36,40 +36,83 @@ int main() {
         if (!strcmp(newCommand->cmd, "lcd")) {
             printf("Fazer lcd\n");
         }
+
         else if (!strcmp(newCommand->cmd, "lls")) {
             printf("Fazer lls\n");
         }
+
         else if (!strcmp(newCommand->cmd, "rcd")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RCD);
 
-            int send_len = sendMessage(mySocket, newMessage);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
+            char response = NACK;
+            while (response == NACK) {
+                int send_len = sendMessage(mySocket, newMessage);
+                if(send_len < 0){
+                    printf("Erro ao enviar dados para socket.\n");
+                }
+                response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            printf("Mensagem recebida: %d\n", (int)response);
+            if (response == ERROR) {
+                printf("Erro!");
+                // trata erro
+            }
+            sequence++;
         }
+
         else if (!strcmp(newCommand->cmd, "rls")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RLS);
 
-            int send_len = sendMessage(mySocket, newMessage);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
+            char response = NACK;
+            while (response == NACK) {
+                int send_len = sendMessage(mySocket, newMessage);
+                if(send_len < 0){
+                    printf("Erro ao enviar dados para socket.\n");
+                }
+                response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            printf("Mensagem recebida: %d\n", (int)response);
+            if (response == ERROR) {
+                printf("Erro!");
+                // trata erro
+            }
+            sequence++;
         }
         else if (!strcmp(newCommand->cmd, "get")) {
             t_message *newMessage = buildMessage(newCommand, sequence, GET);
 
-            int send_len = sendMessage(mySocket, newMessage);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
+            char response = NACK;
+            while (response == NACK) {
+                int send_len = sendMessage(mySocket, newMessage);
+                if(send_len < 0){
+                    printf("Erro ao enviar dados para socket.\n");
+                }
+                response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            printf("Mensagem recebida: %d\n", (int)response);
+            if (response == ERROR) {
+                printf("Erro!");
+                // trata erro
+            }
+            sequence++;
         }
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
 
-            int send_len = sendMessage(mySocket, newMessage);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
+            char response = NACK;
+            while (response == NACK) {
+                int send_len = sendMessage(mySocket, newMessage);
+                if(send_len < 0){
+                    printf("Erro ao enviar dados para socket.\n");
+                }
+                response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            printf("Mensagem recebida: %d\n", (int)response);
+            if (response == ERROR) {
+                printf("Erro!");
+                // trata erro
+            }
+            sequence++;
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             printf("Fazer lmkdir\n");
@@ -77,15 +120,26 @@ int main() {
         else if (!strcmp(newCommand->cmd, "rmkdir")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RMKDIR);
 
-            int send_len = sendMessage(mySocket, newMessage);
-            if(send_len < 0){
-                printf("Erro ao enviar dados para socket.\n");
+            char response = NACK;
+            while (response == NACK) {
+                int send_len = sendMessage(mySocket, newMessage);
+                if(send_len < 0){
+                    printf("Erro ao enviar dados para socket.\n");
+                }
+                response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            printf("Mensagem recebida: %d\n", (int)response);
+            if (response == ERROR) {
+                printf("Erro!");
+                // trata erro
+            }
+            sequence++;
         }
         else {
             printf("Erro: comando desconhecido!\n");
         }
     }
-    sequence++;
+    
+    return 0;
+}
 
-} 

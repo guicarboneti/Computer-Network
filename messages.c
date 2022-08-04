@@ -42,7 +42,7 @@ t_message *buildMessage(t_command *command, int sequence, int cmdCode) {
     newMessage->header.size = j * sizeof(char);
 
     // implementar cálculo de paridade
-    newMessage->parity = 0;
+    calculateParity(newMessage);
 
     //printMessage(newMessage);
     return newMessage;
@@ -129,4 +129,20 @@ char awaitServerResponse(int socket, char *errorCode, int sequence) {
         time += timestamp() - startTimestamp;
 	}
     return TIMEOUT;
+}
+
+void calculateParity (t_message *message) {
+    int i, j, sum, bits[8];
+    for (i=0; i<message->header.size; i++) {    // each char in data
+        bits = charToBinary(message->data[i]);
+        for (j=0; j<8; j++) {                  // each bit in data char
+            if (bits[j] == 1)
+                sum++;
+        }
+        compareParidade() // pensar melhor
+    }
+}
+
+int *charToBinary() {
+
 }

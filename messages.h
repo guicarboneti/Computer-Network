@@ -23,4 +23,6 @@ int sendNack(int socket, t_message *message);
 
 char awaitServerResponse(int socket, char *errorCode, int sequence);
 
+void calculateParity (t_message *message);
+
 #endif

@@ -44,6 +44,10 @@ int main() {
                         printf("Erro ao enviar dados para socket.\n");
                     }
                 }
+                char calc_parity = calculateParity(receivedMessage);
+                if (compareParity(calc_parity, receivedMessage->parity) == 0) {
+                    printf("Erro ao enviar dados para socket.\n");
+                }
             }
             else {
                 int send_len = sendNack(mySocket, receivedMessage);

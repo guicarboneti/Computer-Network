@@ -42,7 +42,7 @@ t_message *buildMessage(t_command *command, int sequence, int cmdCode) {
     newMessage->header.size = j * sizeof(char);
 
     // implementar cálculo de paridade
-    calculateParity(newMessage);
+    newMessage->parity = calculateParity(newMessage);
 
     //printMessage(newMessage);
     return newMessage;
@@ -53,7 +53,6 @@ t_message *receiveMessage(int socket) {
 
     // maximum size of message
     char *buffer = malloc(70);
-
 
     struct timeval tv;
     tv.tv_sec = 20;
@@ -79,9 +78,6 @@ t_message *receiveMessage(int socket) {
     newMessage->parity = buffer[i+4];
 
     // treat bigger than expected
-
-    // check parity
-
 
     free(buffer);
     return newMessage;
@@ -131,18 +127,36 @@ char awaitServerResponse(int socket, char *errorCode, int sequence) {
     return TIMEOUT;
 }
 
-void calculateParity (t_message *message) {
-    int i, j, sum, bits[8];
+int calculateParity (t_message *message) {
+    int i, j, bits[8], parity[8] = {0};
     for (i=0; i<message->header.size; i++) {    // each char in data
-        bits = charToBinary(message->data[i]);
-        for (j=0; j<8; j++) {                  // each bit in data char
-            if (bits[j] == 1)
-                sum++;
+        charToBinary(bits, message->data[i]);
+        for (j=0; j<8; j++) {                   // each bit in data char
+            if (bits[j] == '1')
+                parity[j]++;                    // store sum of 1's in position j for each char
         }
-        compareParidade() // pensar melhor
     }
+
+    for (i=0; i<8; i++) {                       // calculate parity and store it in array bits
+        if (parity[i]%2 == 0)
+            parity[i] = 0;
+        else
+            parity[i] = 1;
+    }
+
+
+    return binaryToDecimal(parity); 
 }
 
-int *charToBinary() {
+int compareParity(char parity1, char parity2) {
+    int i;
+    int bin_msg1[8], bin_msg2[8];
+    charToBinary(bin_msg1, parity1);
+    charToBinary(bin_msg2, parity2);
 
+    for (i=0; i<8; i++) {
+        if (bin_msg1[i] != bin_msg2[i])
+            return 0;
+    }
+    return 1;
 }

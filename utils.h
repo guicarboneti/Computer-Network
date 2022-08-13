@@ -12,4 +12,8 @@ t_command *buildCommand(char *text);
 
 double timestamp(void);
 
+void charToBinary(int *bits, char c);
+
+int binaryToDecimal(int *n);
+
 #endif

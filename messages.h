@@ -23,4 +23,9 @@ int sendNack(int socket, t_message *message);
 
 char awaitServerResponse(int socket, char *errorCode, int sequence);
 
+int calculateParity (t_message *message);
+
+// return 1 if equal, 0 instead
+int compareParity(char parity1, char parity2);
+
 #endif

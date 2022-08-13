@@ -27,7 +27,8 @@ int main() {
     while (1) {
         t_message *receivedMessage = receiveMessage(mySocket);
         if (receivedMessage != NULL) {
-            if (receivedMessage->header.marker == STARTMARKER) {
+            char calc_parity = calculateParity(receivedMessage);
+            if ((receivedMessage->header.marker == STARTMARKER) || !(compareParity(calc_parity, receivedMessage->parity))) {
                 if (receivedMessage->header.sequence == sequence) {
                     printMessage(receivedMessage);
                     receivedMessage->header.type = OK;

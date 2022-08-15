@@ -20,6 +20,14 @@
 #define DATA 32
 #define PUT 10
 
+// errors
+#define DIRECTORYNOTEXISTANT 'a'
+#define WITHOUTPERMISSION 'b'
+#define DIRECTORYALREADYEXISTS 'c'
+#define ARCHIVENOTEXISTANT 'd'
+#define WITHOUTSPACE 'e'
+#define OTHER 'f'
+
 #define TIMEOUT 42
 
 #define END 46

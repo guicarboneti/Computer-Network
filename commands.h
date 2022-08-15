@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-void fun();
+char lcd(t_command *command);
+
+char lls(t_command *command, char **names);
 
 #endif

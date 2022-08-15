@@ -12,6 +12,7 @@
 #include "types.h"
 #include "utils.h"
 #include "messages.h"
+#include "commands.h"
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");
@@ -34,11 +35,29 @@ int main() {
         t_command *newCommand = buildCommand(command);
 
         if (!strcmp(newCommand->cmd, "lcd")) {
-            printf("Fazer lcd\n");
+            char res = lcd(newCommand);
+            if (res == OK)
+                printf("Entrou no diretório %s\n", newCommand->args[0]);
+            else {
+                switch (res) {
+                case DIRECTORYNOTEXISTANT:
+                    printf("Erro: diretório não existe!\n");
+                    break;
+                
+                case WITHOUTPERMISSION:
+                    printf("Erro: sem permissão!\n");
+                    break;
+
+                default:
+                    printf("Erro!\n");
+                    break;
+                }
+            }
         }
 
         else if (!strcmp(newCommand->cmd, "lls")) {
-            printf("Fazer lls\n");
+            char **names;
+            lls(newCommand, names);
         }
 
         else if (!strcmp(newCommand->cmd, "rcd")) {

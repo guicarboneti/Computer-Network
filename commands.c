@@ -31,25 +31,39 @@ char lcd(t_command *command) {
         return OK;
 }
 
-char lls(t_command *command, char **names) {
+char lls(t_command *command, int *size, char **names) {
     DIR *dp = NULL; 
     struct dirent *dptr = NULL; 
     unsigned int count = 0;
   
     dp = opendir(".");
+    int arraysize = 20;
+    names = malloc(arraysize * sizeof(char *));
 
     if (!dp)
         return DIRECTORYNOTEXISTANT;
     
     if (command->numArgs == 0) {
         for(count = 0; NULL != (dptr = readdir(dp)); count++) { 
-            if(dptr->d_name[0] != '.') 
-                printf("%s\n",dptr->d_name); 
+            if(dptr->d_name[0] != '.')  {
+                names[count] = malloc(63 * sizeof(char));
+                sprintf(names[count], "%s",dptr->d_name);
+                if ((count % 20) == 0) {
+                    arraysize+=20;
+                    names = realloc(names, arraysize * sizeof(char *));
+                }
+            }
         }
     }
     else if (strcmp(command->args[0], "-a") == 0) {
-        for(count = 0; NULL != (dptr = readdir(dp)); count++)
-            printf("%s\n",dptr->d_name); 
+        for(count = 0; NULL != (dptr = readdir(dp)); count++) {
+            names[count] = malloc(63 * sizeof(char));
+            sprintf(names[count], "%s",dptr->d_name);
+            if ((count % 20) == 0) {
+                arraysize+=20;
+                names = realloc(names, arraysize * sizeof(char *));
+            }
+        }
     }
     else if (strcmp(command->args[0], "-l") == 0) {
         for(count = 0; NULL != (dptr = readdir(dp)); count++) {
@@ -71,9 +85,28 @@ char lls(t_command *command, char **names) {
             wOth = (fileStat->st_mode & S_IWOTH) ? 'w' : '-';
             xOth = (fileStat->st_mode & S_IXOTH) ? 'x' : '-';
 
-            printf("%c%c%c%c%c%c%c%c%c %s\n", rUser, wUser, xUser, rGrp, wGrp, xGrp, rOth, wOth, xOth, dptr->d_name);
+            names[count] = malloc(63 * sizeof(char));
+            sprintf(names[count], "%c%c%c%c%c%c%c%c%c %s", rUser, wUser, xUser, rGrp, wGrp, xGrp, rOth, wOth, xOth, dptr->d_name);
+            if ((count % 20) == 0) {
+                arraysize+=20;
+                names = realloc(names, arraysize * sizeof(char *));
+            }
+        }
+    }
+    else {
+        for(count = 0; NULL != (dptr = readdir(dp)); count++) { 
+            if(dptr->d_name[0] != '.')  {
+                names[count] = malloc(63 * sizeof(char));
+                sprintf(names[count], "%s",dptr->d_name);
+                if ((count % 20) == 0) {
+                    arraysize+=20;
+                    names = realloc(names, arraysize * sizeof(char *));
+                }
+            }
         }
     }
 
-    return 0;
+    *size = count;
+
+    return OK;
 }

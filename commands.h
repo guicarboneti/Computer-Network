@@ -11,8 +11,10 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+
+// mudar para strings de argumentos
 char lcd(t_command *command);
 
-char lls(t_command *command, char **names);
+char lls(t_command *command, int *size, char **names);
 
 #endif

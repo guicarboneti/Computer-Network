@@ -57,7 +57,10 @@ int main() {
 
         else if (!strcmp(newCommand->cmd, "lls")) {
             char **names;
-            lls(newCommand, names);
+            int size;
+            lls(newCommand, &size, names);
+            for (int i = 0; i < size; i++)
+                printf("%s\n", names[i]);
         }
 
         else if (!strcmp(newCommand->cmd, "rcd")) {

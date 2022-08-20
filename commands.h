@@ -15,6 +15,6 @@
 // mudar para strings de argumentos
 char lcd(t_command *command);
 
-char lls(t_command *command, int *size, char **names);
+char lls(char *arg, int *size, char ***names);
 
 #endif

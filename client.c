@@ -58,9 +58,32 @@ int main() {
         else if (!strcmp(newCommand->cmd, "lls")) {
             char **names;
             int size;
-            lls(newCommand, &size, names);
-            for (int i = 0; i < size; i++)
-                printf("%s\n", names[i]);
+
+            char args[3] = "";
+            for (int i = 0; i < newCommand->numArgs; i++) {
+                if (strcmp(newCommand->args[i], "-a") == 0)
+                    strcpy(args, "-a");
+                else if (strcmp(newCommand->args[i], "-l") == 0)
+                    strcpy(args, "-l");
+            }
+            char res = lls(args, &size, &names);
+
+            if (res == OK)
+                for (int i = 0; i < size; i++)
+                    printf("%s\n", names[i]);
+
+            else {
+                switch(res) {
+                    case DIRECTORYNOTEXISTANT:
+                        printf("Erro: diretório não existe!\n");
+                        break;
+                    default:
+                        printf("Erro!");
+                        break;
+                }
+            }
+
+            free(names);
         }
 
         else if (!strcmp(newCommand->cmd, "rcd")) {

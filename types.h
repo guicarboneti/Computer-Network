@@ -25,7 +25,7 @@
 #define WITHOUTPERMISSION 'b'
 #define DIRECTORYALREADYEXISTS 'c'
 #define ARCHIVENOTEXISTANT 'd'
-#define WITHOUTSPACE 'e'
+#define NOSPACE 'e'
 #define OTHER 'f'
 
 #define TIMEOUT 42

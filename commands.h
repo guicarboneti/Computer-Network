@@ -12,9 +12,10 @@
 #include <netinet/tcp.h>
 
 
-// mudar para strings de argumentos
-char lcd(t_command *command);
+char lcd(char *dir);
 
 char lls(char *arg, int *size, char ***names);
+
+char lmkdir(char *name);
 
 #endif

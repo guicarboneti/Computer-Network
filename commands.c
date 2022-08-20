@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-char lcd(t_command *command) {
-    int result = chdir(command->args[0]);
+char lcd(char *dir) {
+    int result = chdir(dir);
 
     if (result == -1) {
         switch (errno) {
@@ -106,4 +106,24 @@ char lls(char *arg, int *size, char ***names) {
     *names = dirNames;
 
     return OK;
+}
+
+char lmkdir(char *name) {
+    int result = mkdir(name, 0777);
+
+    if (result == -1) {
+        switch(errno) {
+            case EACCES:
+                return WITHOUTPERMISSION;
+                break;
+            case EEXIST:
+                return DIRECTORYALREADYEXISTS;
+                break;
+            default:
+                return OTHER;
+                break;
+        }
+    }
+    else 
+        return OK;
 }

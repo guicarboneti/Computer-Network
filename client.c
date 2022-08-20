@@ -35,22 +35,24 @@ int main() {
         t_command *newCommand = buildCommand(command);
 
         if (!strcmp(newCommand->cmd, "lcd")) {
-            char res = lcd(newCommand);
-            if (res == OK)
-                printf("Entrou no diretório %s\n", newCommand->args[0]);
-            else {
-                switch (res) {
-                case DIRECTORYNOTEXISTANT:
-                    printf("Erro: diretório não existe!\n");
-                    break;
-                
-                case WITHOUTPERMISSION:
-                    printf("Erro: sem permissão!\n");
-                    break;
+            if (newCommand->numArgs > 0) {
+                char res = lcd(newCommand->args[0]);
+                if (res == OK)
+                    printf("Entrou no diretório %s\n", newCommand->args[0]);
+                else {
+                    switch (res) {
+                    case DIRECTORYNOTEXISTANT:
+                        printf("Erro: diretório não existe!\n");
+                        break;
+                    
+                    case WITHOUTPERMISSION:
+                        printf("Erro: sem permissão!\n");
+                        break;
 
-                default:
-                    printf("Erro!\n");
-                    break;
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
                 }
             }
         }
@@ -180,7 +182,26 @@ int main() {
                 printf("Timeout! Tente novamente\n");
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
-            printf("Fazer lmkdir\n");
+            if (newCommand->numArgs > 0) {
+                char res = lmkdir(newCommand->args[0]);
+                if (res == OK)
+                    printf("Diretório foi criado com sucesso.\n");
+                else {
+                    switch (res) {
+                    case WITHOUTPERMISSION:
+                        printf("Erro: sem permissão!\n");
+                        break;
+
+                    case DIRECTORYALREADYEXISTS:
+                        printf("Erro: diretório já existe!\n");
+                        break;
+                    
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
+                }
+            }
         }
         else if (!strcmp(newCommand->cmd, "rmkdir")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RMKDIR);

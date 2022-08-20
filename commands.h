@@ -11,6 +11,11 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-void fun();
+
+char lcd(char *dir);
+
+char lls(char *arg, int *size, char ***names);
+
+char lmkdir(char *name);
 
 #endif

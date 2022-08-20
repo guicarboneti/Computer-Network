@@ -21,7 +21,7 @@ messages.o: messages.c messages.h
 	gcc messages.c -c
 
 commands.o: commands.c commands.h
-	gcc commands.c -c
+	gcc -g commands.c -c
 
 purge: clean
 	-rm -f client server

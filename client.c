@@ -12,6 +12,7 @@
 #include "types.h"
 #include "utils.h"
 #include "messages.h"
+#include "commands.h"
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");
@@ -34,11 +35,57 @@ int main() {
         t_command *newCommand = buildCommand(command);
 
         if (!strcmp(newCommand->cmd, "lcd")) {
-            printf("Fazer lcd\n");
+            if (newCommand->numArgs > 0) {
+                char res = lcd(newCommand->args[0]);
+                if (res == OK)
+                    printf("Entrou no diretório %s\n", newCommand->args[0]);
+                else {
+                    switch (res) {
+                    case DIRECTORYNOTEXISTANT:
+                        printf("Erro: diretório não existe!\n");
+                        break;
+                    
+                    case WITHOUTPERMISSION:
+                        printf("Erro: sem permissão!\n");
+                        break;
+
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
+                }
+            }
         }
 
         else if (!strcmp(newCommand->cmd, "lls")) {
-            printf("Fazer lls\n");
+            char **names;
+            int size;
+
+            char args[3] = "";
+            for (int i = 0; i < newCommand->numArgs; i++) {
+                if (strcmp(newCommand->args[i], "-a") == 0)
+                    strcpy(args, "-a");
+                else if (strcmp(newCommand->args[i], "-l") == 0)
+                    strcpy(args, "-l");
+            }
+            char res = lls(args, &size, &names);
+
+            if (res == OK)
+                for (int i = 0; i < size; i++)
+                    printf("%s\n", names[i]);
+
+            else {
+                switch(res) {
+                    case DIRECTORYNOTEXISTANT:
+                        printf("Erro: diretório não existe!\n");
+                        break;
+                    default:
+                        printf("Erro!");
+                        break;
+                }
+            }
+
+            free(names);
         }
 
         else if (!strcmp(newCommand->cmd, "rcd")) {
@@ -135,7 +182,26 @@ int main() {
                 printf("Timeout! Tente novamente\n");
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
-            printf("Fazer lmkdir\n");
+            if (newCommand->numArgs > 0) {
+                char res = lmkdir(newCommand->args[0]);
+                if (res == OK)
+                    printf("Diretório foi criado com sucesso.\n");
+                else {
+                    switch (res) {
+                    case WITHOUTPERMISSION:
+                        printf("Erro: sem permissão!\n");
+                        break;
+
+                    case DIRECTORYALREADYEXISTS:
+                        printf("Erro: diretório já existe!\n");
+                        break;
+                    
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
+                }
+            }
         }
         else if (!strcmp(newCommand->cmd, "rmkdir")) {
             t_message *newMessage = buildMessage(newCommand, sequence, RMKDIR);

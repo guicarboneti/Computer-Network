@@ -28,4 +28,10 @@ int calculateParity (t_message *message);
 // return 1 if equal, 0 instead
 int compareParity(char parity1, char parity2);
 
+/*
+Send messages that could be either Ok or Error responses.
+Used in RCD and RMKDIR commands.
+*/
+int sendOkErrorResponse(int socket, int sequence, char status, char response);
+
 #endif

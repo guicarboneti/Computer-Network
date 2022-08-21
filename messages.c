@@ -113,10 +113,10 @@ int sendNack(int socket, t_message *message) {
 char awaitServerResponse(int socket, char *errorCode, int sequence) {
     double time = 0;
     double startTimestamp = timestamp();
-	while(time <= 20000) {
+	while(1) {
 		t_message *response = receiveMessage(socket);
         if (response != NULL) {
-            if (response->header.marker == STARTMARKER && response->header.sequence == sequence && ((response->header.type == ACK) || (response->header.type == OK) || (response->header.type == ERROR))) {
+            if (response->header.marker == STARTMARKER && response->header.sequence == sequence && ((response->header.type == NACK) || (response->header.type == ACK) || (response->header.type == OK) || (response->header.type == ERROR))) {
                 if (response->header.size > 0)
                     *errorCode = response->data[0];
                 return response->header.type;
@@ -159,4 +159,25 @@ int compareParity(char parity1, char parity2) {
             return 0;
     }
     return 1;
+}
+
+int sendOkErrorResponse(int socket, int sequence, char status, char response) {
+    t_message *newMessage = malloc(sizeof(t_message));
+    newMessage->data = malloc(sizeof(char));
+
+    //builds header
+    newMessage->header.marker = STARTMARKER;
+    newMessage->header.sequence = sequence;
+    newMessage->header.size = 1;
+    newMessage->header.type = status;
+
+    newMessage->data[0] = response;
+
+    newMessage->parity = calculateParity(newMessage);
+    
+    int sendLen = sendMessage(socket, newMessage);
+
+    free(newMessage);
+
+    return sendLen;
 }

@@ -52,14 +52,14 @@ t_message *receiveMessage(int socket) {
     t_message *newMessage = malloc(sizeof(t_message));
 
     // maximum size of message
-    char *buffer = malloc(70);
+    char *buffer = malloc(68);
 
     struct timeval tv;
     tv.tv_sec = 20;
     tv.tv_usec = 0;
     setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
     
-    int buflen = recv(socket, buffer, 70, 0);
+    int buflen = recv(socket, buffer, 68, 0);
     if (buflen < 0) {
         printf("Erro ao receber dados\n");
         return NULL;
@@ -99,7 +99,7 @@ int sendMessage(int socket, t_message *message) {
     buffer[i] = message->parity;
 
     // send (maximum message size is 67)
-    int sendLen = send(socket, buffer, 70, 0);
+    int sendLen = send(socket, buffer, 68, 0);
 
     free(buffer);
     return sendLen;

@@ -11,6 +11,7 @@
 
 #include "types.h"
 #include "messages.h"
+#include "commands.h"
 
 int main() {
     int mySocket = ConexaoRawSocket("lo");
@@ -28,15 +29,34 @@ int main() {
         t_message *receivedMessage = receiveMessage(mySocket);
         if (receivedMessage != NULL) {
             char calc_parity = calculateParity(receivedMessage);
-            if ((receivedMessage->header.marker == STARTMARKER) || !(compareParity(calc_parity, receivedMessage->parity))) {
+            if ((receivedMessage->header.marker == STARTMARKER) && (compareParity(calc_parity, receivedMessage->parity))) {
                 if (receivedMessage->header.sequence == sequence) {
-                    printMessage(receivedMessage);
-                    receivedMessage->header.type = OK;
-                    int send_len = sendMessage(mySocket, receivedMessage);
-                    if(send_len < 0){
-                        printf("Erro ao enviar dados para socket.\n");
+                    if (receivedMessage->header.type == RCD) {
+                        char res = lcd(receivedMessage->data);
+                        int send_len;
+
+                        if (res == OK)
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, OK, res);
+                        else
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+                        if (send_len < 0) {
+                            printf("Erro ao enviar dados para socket.\n");
+                        }
+                        sequence++;
                     }
-                    sequence++;
+                    else if (receivedMessage->header.type == RMKDIR) {
+                        char res = lmkdir(receivedMessage->data);
+                        int send_len;
+
+                         if (res == OK)
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, OK, res);
+                        else
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+                        if (send_len < 0) {
+                            printf("Erro ao enviar dados para socket.\n");
+                        }
+                        sequence++;
+                    }
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
                 else if (receivedMessage->header.sequence > sequence) {

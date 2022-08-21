@@ -89,27 +89,40 @@ int main() {
         }
 
         else if (!strcmp(newCommand->cmd, "rcd")) {
-            t_message *newMessage = buildMessage(newCommand, sequence, RCD);
+            if (newCommand->numArgs > 0) {
+                t_message *newMessage = buildMessage(newCommand, sequence, RCD);
 
-            char response = NACK;
-            while (response == NACK) {
-                int send_len = sendMessage(mySocket, newMessage);
-                if(send_len < 0){
-                    printf("Erro ao enviar dados para socket.\n");
+                char response = NACK;
+                while (response == NACK) {
+                    int send_len = sendMessage(mySocket, newMessage);
+                    if(send_len < 0){
+                        printf("Erro ao enviar dados para socket.\n");
+                    }
+                    response = awaitServerResponse(mySocket, &errorCode, sequence);
                 }
-                response = awaitServerResponse(mySocket, &errorCode, sequence);
+                if (response == ERROR) {
+                    switch (errorCode) {
+                    case DIRECTORYNOTEXISTANT:
+                        printf("Erro: diretório não existe!\n");
+                        break;
+                    
+                    case WITHOUTPERMISSION:
+                        printf("Erro: sem permissão!\n");
+                        break;
+
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
+                    sequence++;
+                }
+                else if (response == OK) {
+                    printf("Entrou no diretório %s\n", newCommand->args[0]);
+                    sequence++;
+                }
+                else if (response == TIMEOUT)
+                    printf("Timeout! Tente novamente\n");
             }
-            if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
-                sequence++;
-            }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
-                sequence++;
-            }
-            else if (response == TIMEOUT)
-                printf("Timeout! Tente novamente\n");
         }
 
         else if (!strcmp(newCommand->cmd, "rls")) {
@@ -215,12 +228,23 @@ int main() {
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
             if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
+                switch (errorCode) {
+                case WITHOUTPERMISSION:
+                    printf("Erro: sem permissão!\n");
+                    break;
+
+                case DIRECTORYALREADYEXISTS:
+                    printf("Erro: diretório já existe!\n");
+                    break;
+                
+                default:
+                    printf("Erro!\n");
+                    break;
+                }
                 sequence++;
             }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
+            else if (response == OK) {
+                printf("Diretório foi criado com sucesso.\n");
                 sequence++;
             }
             else if (response == TIMEOUT)

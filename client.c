@@ -137,12 +137,18 @@ int main() {
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
             if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
+                switch (errorCode) {
+                case DIRECTORYNOTEXISTANT:
+                    printf("Erro: diretório não existe!\n");
+                    break;
+                default:
+                    printf("Erro!");
+                    break;
+                }
                 sequence++;
             }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
+            else if (response == ACK) {
+                printf("Receber diretórios!\n");
                 sequence++;
             }
             else if (response == TIMEOUT)
@@ -257,4 +263,3 @@ int main() {
     
     return 0;
 }
-

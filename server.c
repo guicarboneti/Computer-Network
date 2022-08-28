@@ -42,21 +42,53 @@ int main() {
                         if (send_len < 0) {
                             printf("Erro ao enviar dados para socket.\n");
                         }
-                        sequence++;
                     }
                     else if (receivedMessage->header.type == RMKDIR) {
                         char res = lmkdir(receivedMessage->data);
                         int send_len;
 
-                         if (res == OK)
+                        if (res == OK)
                             send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, OK, res);
                         else
                             send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
                         if (send_len < 0) {
                             printf("Erro ao enviar dados para socket.\n");
                         }
-                        sequence++;
                     }
+                    else if (receivedMessage->header.type == RLS) {
+                        char *delim = ",";
+                        char *ptr = strtok(receivedMessage->data, delim);
+
+                        char args[3] = "";
+                        while (ptr != NULL) {
+                            if (strcmp(ptr, "a") == 0)
+                                strcpy(args, "-a");
+                            else if (strcmp(ptr, "l") == 0)
+                                strcpy(args, "-l");
+
+                            ptr = strtok(NULL, delim);
+                        }
+
+                        printf("%s\n", args);
+
+                        char **names;
+                        int size;
+                        char res = lls(args, &size, &names);
+
+                        int send_len;
+                        if (res == OK) {
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
+                            // create function to send names array to client
+                            free(names);
+                        }
+                        else
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+
+                        if (send_len < 0) {
+                            printf("Erro ao enviar dados para socket.\n");
+                        }
+                    }
+                    sequence++;
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
                 else if (receivedMessage->header.sequence > sequence) {

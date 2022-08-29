@@ -127,3 +127,36 @@ char lmkdir(char *name) {
     else 
         return OK;
 }
+
+char **loadFile(char *filename) {
+
+    FILE *fd = fopen(filename, "r");
+
+    int arraySize = 1000;
+    char **fileData = malloc(arraySize*sizeof(char *));
+
+    int i = 0;
+    int readSize;
+
+    char readData[63];
+
+    while ((readSize = fread(readData, 1, 63, fd)) > 0) {
+        fileData[i] = malloc(readSize);
+        fileData[i] = readData;
+        i++;
+
+        if ((i % arraySize) == 0) {
+            arraySize+=1000;
+            fileData = realloc(fileData, arraySize*sizeof(char *));
+        }
+    }
+
+    fclose(fd);
+    return fileData;
+}
+
+char put(char *filename) {
+    char **fileData = loadFile(filename);
+
+    return OK;
+}

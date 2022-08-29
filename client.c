@@ -180,6 +180,8 @@ int main() {
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
 
+            put(newCommand->args[0]);
+
             char response = NACK;
             while (response == NACK) {
                 int send_len = sendMessage(mySocket, newMessage);

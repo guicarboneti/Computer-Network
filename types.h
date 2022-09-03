@@ -28,8 +28,6 @@
 #define NOSPACE 'e'
 #define OTHER 'f'
 
-#define TIMEOUT 42
-
 #define END 46
 
 typedef struct {

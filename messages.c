@@ -111,9 +111,7 @@ int sendNack(int socket, t_message *message) {
 }
 
 char awaitServerResponse(int socket, char *errorCode, int sequence) {
-    double time = 0;
-    double startTimestamp = timestamp();
-	while(time <= 20000) {
+	while(1) {
 		t_message *response = receiveMessage(socket);
         if (response != NULL) {
             if (response->header.marker == STARTMARKER && response->header.sequence == sequence && ((response->header.type == NACK) || (response->header.type == ACK) || (response->header.type == OK) || (response->header.type == ERROR))) {
@@ -122,9 +120,7 @@ char awaitServerResponse(int socket, char *errorCode, int sequence) {
                 return response->header.type;
             }
         }
-        time += timestamp() - startTimestamp;
 	}
-    return TIMEOUT;
 }
 
 int calculateParity (t_message *message) {

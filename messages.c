@@ -180,3 +180,43 @@ int sendOkErrorResponse(int socket, int sequence, char status, char response) {
 
     return sendLen;
 }
+
+void sendRlsResult(char **names) {
+
+    char response, errorCode;
+    
+    t_message *newMessage = malloc(sizeof(t_message));
+    newMessage->header.marker = STARTMARKER;
+    newMessage->header.type = PRINT;
+    newMessage->data = calloc(63, sizeof(char));
+
+    int i, j, end=0;
+    for (i=0; !end; i++) {  // loop each line of names
+        for (j=0; names[i][j] != '\n'; j++) {     // loop each char of the line
+            if (names[i][j] == NULL)
+                end = 1;
+            
+            // sends 1 message
+            newMessage->header.sequence = i;
+            newMessage->header.size = strlen(names[i]);
+            newMessage->data[j] = names[i][j];
+            newMessage->parity = calculateParity(newMessage);
+            sendMessage(socket, newMessage);
+            memset(newMessage->data, 0, strlen(newMessage->data));
+        }
+        if ((i+1) % 4 == 0) {
+            response = awaitServerResponse(socket, &errorCode, i);
+            if (response == NACK) {
+                i = (i+1)-4;    // resend window
+            }
+        }
+    }
+
+    // end of stream
+    newMessage->header.type = END;
+    newMessage->header.sequence = i;
+    newMessage->header.size = 0;
+    newMessage->parity = 0;
+    memset(newMessage->data, 0, strlen(newMessage->data));
+    sendMessage(socket, newMessage);
+}

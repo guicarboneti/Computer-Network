@@ -147,6 +147,15 @@ int main() {
             }
             else if (response == ACK) {
                 printf("Receber diretórios!\n");
+                t_message *received = receiveMessage(mySocket);
+                if (received) {
+                    for (int i=0; i<received->header.size; i++)
+                        printf("%c", received->data[i]);
+                    printf("\n");
+                    // t_message *newMessage = buildMessage(newCommand, sequence, ACK);
+                } else {
+                    // t_message *newMessage = buildMessage(newCommand, sequence, NACK);
+                }
                 sequence++;
             }
         }

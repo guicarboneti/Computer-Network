@@ -78,7 +78,7 @@ int main() {
                         int send_len;
                         if (res == OK) {
                             send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
-                            // create function to send names array to client
+                            sendRlsResult(names);
                             free(names);
                         }
                         else

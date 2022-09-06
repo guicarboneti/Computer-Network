@@ -34,4 +34,6 @@ Used in RCD and RMKDIR commands.
 */
 int sendOkErrorResponse(int socket, int sequence, char status, char response);
 
+void sendRlsResult(char **names);
+
 #endif

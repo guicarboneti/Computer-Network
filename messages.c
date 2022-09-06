@@ -120,6 +120,9 @@ char awaitServerResponse(int socket, char *errorCode, int sequence) {
                 return response->header.type;
             }
         }
+        else {
+            return NACK;
+        }
 	}
 }
 

@@ -147,15 +147,18 @@ int main() {
             }
             else if (response == ACK) {
                 printf("Receber diretórios!\n");
-                t_message *received = receiveMessage(mySocket);
-                if (received) {
-                    for (int i=0; i<received->header.size; i++)
-                        printf("%c", received->data[i]);
+                int send_len;
+                t_message *receivedMessage = receiveMessage(mySocket);
+                if (receivedMessage) {
+                    for (int i=0; i<receivedMessage->header.size; i++)
+                        printf("%c", receivedMessage->data[i]);
                     printf("\n");
-                    // t_message *newMessage = buildMessage(newCommand, sequence, ACK);
+                send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, ACK);
                 } else {
-                    // t_message *newMessage = buildMessage(newCommand, sequence, NACK);
+                send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
                 }
+                if (send_len < 0)
+                    printf("Erro ao enviar dados para socket.\n");
                 sequence++;
             }
         }

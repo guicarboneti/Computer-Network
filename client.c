@@ -114,11 +114,11 @@ int main() {
                         printf("Erro!\n");
                         break;
                     }
-                    sequence++;
+                    sequence = (sequence+1) % 16;
                 }
                 else if (response == OK) {
                     printf("Entrou no diretório %s\n", newCommand->args[0]);
-                    sequence++;
+                    sequence = (sequence+1) % 16;
                 }
             }
         }
@@ -134,6 +134,7 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+
             if (response == ERROR) {
                 switch (errorCode) {
                 case DIRECTORYNOTEXISTANT:
@@ -143,23 +144,50 @@ int main() {
                     printf("Erro!");
                     break;
                 }
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
             else if (response == ACK) {
-                printf("Receber diretórios!\n");
-                int send_len;
+                printf("Receber diretórios!\n\n");
+
+                char calc_parity;
+                int send_len, i;
                 t_message *receivedMessage = receiveMessage(mySocket);
-                if (receivedMessage) {
-                    for (int i=0; i<receivedMessage->header.size; i++)
-                        printf("%c", receivedMessage->data[i]);
-                    printf("\n");
-                send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, ACK);
-                } else {
-                send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
+                if (receivedMessage != NULL) {
+                    while (receivedMessage->header.type != END) {
+                        calc_parity = calculateParity(receivedMessage);
+                        if ((receivedMessage->header.marker == STARTMARKER) && (compareParity(calc_parity, receivedMessage->parity))) {
+                            if (receivedMessage->header.sequence == sequence) {
+                                if (receivedMessage && receivedMessage->header.type == PRINT) {
+                                    for (i=0; i<receivedMessage->header.size; i++)
+                                        printf("%c", receivedMessage->data[i]);
+                                    printf("\n");
+                                    send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, ACK);
+                                    sequence = (sequence+1) % 16;
+                                } else {
+                                    send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
+                                }
+                                if (send_len < 0)
+                                    printf("Erro ao enviar dados para socket.\n");
+                            }
+                            // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
+                            else if (receivedMessage->header.sequence > sequence) {
+                                send_len = sendNack(mySocket, receivedMessage);
+                                if(send_len < 0){
+                                    printf("Erro ao enviar dados para socket.\n");
+                                }
+                            }
+                        }
+                        else {
+                            send_len = sendNack(mySocket, receivedMessage);
+                            if(send_len < 0) {
+                                printf("Erro ao enviar dados para socket.\n");
+                            }
+                        }
+                        receivedMessage = receiveMessage(mySocket);
+                    }
+                    if (receivedMessage && receivedMessage->header.type == END)
+                        printf("\nDiretórios recebidos!\n");
                 }
-                if (send_len < 0)
-                    printf("Erro ao enviar dados para socket.\n");
-                sequence++;
             }
         }
         else if (!strcmp(newCommand->cmd, "get")) {
@@ -176,11 +204,11 @@ int main() {
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
             else if ((response == ACK) || (response == OK)) {
                 printf("Ok!\n");
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
         }
         else if (!strcmp(newCommand->cmd, "put")) {
@@ -199,11 +227,11 @@ int main() {
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
             else if ((response == ACK) || (response == OK)) {
                 printf("Ok!\n");
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
@@ -253,11 +281,11 @@ int main() {
                     printf("Erro!\n");
                     break;
                 }
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
             else if (response == OK) {
                 printf("Diretório foi criado com sucesso.\n");
-                sequence++;
+                sequence = (sequence+1) % 16;
             }
         }
         else {

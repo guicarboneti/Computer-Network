@@ -71,14 +71,14 @@ int main() {
 
                         printf("%s\n", args);
 
-                        char **names;
+                        char **names = (char **)calloc(63, sizeof(char*));
                         int size;
                         char res = lls(args, &size, &names);
 
                         int send_len;
                         if (res == OK) {
                             send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
-                            sendRlsResult(names);
+                            rls(mySocket, size, names);
                             free(names);
                         }
                         else
@@ -88,7 +88,6 @@ int main() {
                             printf("Erro ao enviar dados para socket.\n");
                         }
                     }
-                    sequence++;
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
                 else if (receivedMessage->header.sequence > sequence) {
@@ -104,6 +103,7 @@ int main() {
                     printf("Erro ao enviar dados para socket.\n");
                 }
             }
+            sequence = (sequence+1) % 16;
         }
     }
 

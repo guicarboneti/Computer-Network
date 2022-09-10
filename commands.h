@@ -16,8 +16,11 @@ char lcd(char *dir);
 
 char lls(char *arg, int *size, char ***names);
 
+void rls(int socket, int size, char **names);
+
 char lmkdir(char *name);
 
 char put();
+
 
 #endif

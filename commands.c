@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "utils.h"
+#include "messages.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -29,6 +30,45 @@ char lcd(char *dir) {
     }
     else
         return OK;
+}
+
+void rls(int socket, int size, char **names) {
+
+    char response, errorCode;
+    
+    t_message *newMessage = malloc(sizeof(t_message));
+    newMessage->data = calloc(63, sizeof(char));
+
+    newMessage->header.marker = STARTMARKER;
+    newMessage->header.type = PRINT;
+
+    int i, j;
+    for (i=0; i<size; i++) {    // loop each line of names
+        newMessage->header.sequence = i;
+        newMessage->header.size = strlen(names[i]);
+        for (j=0; ;j++) {     // loop each char of the line
+            if (names[i][j] == '\0')
+                break;
+            newMessage->data[j] = names[i][j];
+        }
+        newMessage->parity = calculateParity(newMessage);
+        sendMessage(socket, newMessage);
+        memset(newMessage->data, 0, strlen(newMessage->data));
+        if ((i+1) % 4 == 0) {
+            response = awaitServerResponse(socket, &errorCode, i);
+            if (response == NACK) {
+                i = (i+1)-4;    // resend window
+            }
+        }
+    }
+
+    // end of stream
+    newMessage->header.type = END;
+    newMessage->header.sequence = i;
+    newMessage->header.size = 0;
+    newMessage->parity = 0;
+    memset(newMessage->data, 0, strlen(newMessage->data));
+    sendMessage(socket, newMessage);
 }
 
 char lls(char *arg, int *size, char ***names) {

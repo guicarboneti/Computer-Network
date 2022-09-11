@@ -88,6 +88,69 @@ int main() {
                             printf("Erro ao enviar dados para socket.\n");
                         }
                     }
+                    else if (receivedMessage->header.type == PUT) {
+
+                        printf("Recebendo arquivo...\n");
+
+                        char calc_parity;
+                        int send_len, i;
+                        char *filename;
+                        t_message *receivedMessage = receiveMessage(mySocket);
+                        if (receivedMessage != NULL) {
+                            if (receivedMessage->header.type == PUT) {
+                                filename = receivedMessage->data;
+                                FILE *fd = fopen(filename, "w");    // discards content if file exists
+                                fclose (fd);
+                            }
+                            while (receivedMessage->header.type != END) {
+                                calc_parity = calculateParity(receivedMessage);
+                                if ((receivedMessage->header.marker == STARTMARKER) && (compareParity(calc_parity, receivedMessage->parity))) {
+                                    if (receivedMessage->header.sequence == sequence) {
+                                        if (receivedMessage->header.type == FILEDESC) {
+                                            FILE *fp;
+                                            fp = fopen (filename, "a+");
+
+                                            int ret = fwrite (receivedMessage->data, sizeof(unsigned char), receivedMessage->header.size, fp);
+
+                                            int send_len;
+                                            if (ret)
+                                                send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, ACK);
+                                            else
+                                                send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
+                                            if (send_len < 0) {
+                                                printf("Erro ao enviar dados para socket.\n");
+                                            }
+
+                                            fclose(fp);
+                                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, ACK);
+                                            sequence = (sequence+1) % 16;
+                                        } else {
+                                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
+                                        }
+                                        if (send_len < 0)
+                                            printf("Erro ao enviar dados para socket.\n");
+                                    }
+                                    // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
+                                    else if (receivedMessage->header.sequence > sequence) {
+                                        send_len = sendNack(mySocket, receivedMessage);
+                                        if(send_len < 0){
+                                            printf("Erro ao enviar dados para socket.\n");
+                                        }
+                                    }
+                                }
+                                else {
+                                    send_len = sendNack(mySocket, receivedMessage);
+                                    if(send_len < 0) {
+                                        printf("Erro ao enviar dados para socket.\n");
+                                    }
+                                }
+                                receivedMessage = receiveMessage(mySocket);
+                            }
+                            if (receivedMessage && receivedMessage->header.type == END)
+                                printf("Arquivo recebido!\n");
+                        }
+
+                    }
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
                 else if (receivedMessage->header.sequence > sequence) {

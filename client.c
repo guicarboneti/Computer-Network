@@ -214,25 +214,12 @@ int main() {
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
 
-            put(newCommand->args[0]);
-
-            char response = NACK;
-            while (response == NACK) {
-                int send_len = sendMessage(mySocket, newMessage);
-                if(send_len < 0){
-                    printf("Erro ao enviar dados para socket.\n");
-                }
-                response = awaitServerResponse(mySocket, &errorCode, sequence);
-            }
-            if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
-                sequence = (sequence+1) % 16;
-            }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
-                sequence = (sequence+1) % 16;
-            }
+            int send_len = sendMessage(mySocket, newMessage);
+            printf("Enviando arquivo...\n");
+            if (put(mySocket, newCommand->args[0]) == OK)
+                printf("Arquivo enviado!\n");
+            else printf("Erro ao enviar arquivo para o servidor\n");
+            sequence = (sequence+1) % 16;
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             if (newCommand->numArgs > 0) {

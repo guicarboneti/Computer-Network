@@ -205,7 +205,7 @@ unsigned char **loadFile(char *filename, int *blocks) {
     return fileData;
 }
 
-char put(int socket, char *filename) {
+char sendFile(int socket, char *filename) {
     int blocks;
     unsigned char **fileData = loadFile(filename, &blocks);
 

@@ -191,35 +191,104 @@ int main() {
             }
         }
         else if (!strcmp(newCommand->cmd, "get")) {
-            t_message *newMessage = buildMessage(newCommand, sequence, GET);
 
-            char response = NACK;
-            while (response == NACK) {
-                int send_len = sendMessage(mySocket, newMessage);
-                if(send_len < 0){
-                    printf("Erro ao enviar dados para socket.\n");
+            if (newCommand->numArgs > 0) {
+                t_message *newMessage = buildMessage(newCommand, sequence, GET);
+
+                char response = NACK;
+                while (response == NACK) {
+                    int send_len = sendMessage(mySocket, newMessage);
+                    if(send_len < 0){
+                        printf("Erro ao enviar dados para socket.\n");
+                    }
+                    response = awaitServerResponse(mySocket, &errorCode, sequence);
                 }
-                response = awaitServerResponse(mySocket, &errorCode, sequence);
-            }
-            if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
-                sequence = (sequence+1) % 16;
-            }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
+                if (response == ERROR) {
+                    switch (errorCode) {
+                    case ARCHIVENOTEXISTANT:
+                        printf("Erro: arquivo não existe!\n");
+                        break;
+
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
+                }
+                else if (response == OK) {
+                    printf("Recebendo arquivo...\n");
+                    char calc_parity;
+                    int send_len, i;
+                    char *filename;
+                    filename = newCommand->args[0];
+                    FILE *fd = fopen(filename, "w");    // discards content if file exists
+                    fclose (fd);
+                    t_message *receivedMessage = receiveMessage(mySocket);
+                    if (receivedMessage != NULL) {
+                        while (receivedMessage->header.type != END) {
+                            calc_parity = calculateParity(receivedMessage);
+                            if ((receivedMessage->header.marker == STARTMARKER) && (compareParity(calc_parity, receivedMessage->parity))) {
+                                if (receivedMessage->header.sequence == sequence) {
+                                    if (receivedMessage->header.type == FILEDESC) {
+                                        FILE *fp;
+                                        fp = fopen (filename, "a+");
+
+                                        int ret = fwrite (receivedMessage->data, sizeof(unsigned char), receivedMessage->header.size, fp);
+
+                                        int send_len;
+                                        if (ret)
+                                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, ACK);
+                                        else
+                                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
+                                        if (send_len < 0) {
+                                            printf("Erro ao enviar dados para socket.\n");
+                                        }
+
+                                        fclose(fp);
+                                        sequence = (sequence+1) % 16;
+                                    } else {
+                                        send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, NACK, NACK);
+                                    }
+                                    if (send_len < 0)
+                                        printf("Erro ao enviar dados para socket.\n");
+                                }
+                                // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
+                                else if (receivedMessage->header.sequence > sequence) {
+                                    send_len = sendNack(mySocket, receivedMessage);
+                                    if(send_len < 0){
+                                        printf("Erro ao enviar dados para socket.\n");
+                                    }
+                                }
+                            }
+                            else {
+                                send_len = sendNack(mySocket, receivedMessage);
+                                if(send_len < 0) {
+                                    printf("Erro ao enviar dados para socket.\n");
+                                }
+                            }
+                            receivedMessage = receiveMessage(mySocket);
+                        }
+                        if (receivedMessage && receivedMessage->header.type == END)
+                            printf("Arquivo recebido!\n");
+                    }
+                }
                 sequence = (sequence+1) % 16;
             }
         }
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
 
-            int send_len = sendMessage(mySocket, newMessage);
-            printf("Enviando arquivo...\n");
-            if (put(mySocket, newCommand->args[0]) == OK)
-                printf("Arquivo enviado!\n");
-            else printf("Erro ao enviar arquivo para o servidor\n");
-            sequence = (sequence+1) % 16;
+            FILE *fp;
+            fp = fopen (newCommand->args[0], "r");
+            if (!fp)
+                printf("Erro: arquivo não existe!\n");
+            else {
+                int send_len = sendMessage(mySocket, newMessage);
+                printf("Enviando arquivo...\n");
+                if (sendFile(mySocket, newCommand->args[0]) == OK)
+                    printf("Arquivo enviado!\n");
+                else printf("Erro ao enviar arquivo para o servidor\n");
+                sequence = (sequence+1) % 16;
+            }
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             if (newCommand->numArgs > 0) {

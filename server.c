@@ -149,7 +149,30 @@ int main() {
                             if (receivedMessage && receivedMessage->header.type == END)
                                 printf("Arquivo recebido!\n");
                         }
-
+                    }
+                    else if (receivedMessage->header.type == GET) {
+                        printf("Enviando arquivo...\n");
+                        char res;
+                        int send_len;
+                        FILE *fp;
+                        fp = fopen (receivedMessage->data, "r");
+                        if (fp) {
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, OK, res);
+                            res = sendFile(mySocket, receivedMessage->data);
+                        }
+                        else {
+                            printf("Erro: arquivo não existe!\n");
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+                            sequence = (sequence+1) % 16;
+                            res = ERROR;
+                        }
+                    
+                        if (res == OK)
+                            printf("Arquivo enviado!\n");
+                        else
+                            printf("Erro: arquivo não existe!\n");
+                        if (send_len < 0)
+                            printf("Erro ao enviar dados para socket.\n");
                     }
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored

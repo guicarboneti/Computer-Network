@@ -120,6 +120,7 @@ int main() {
                         sequence = (sequence + 1) % 16;
                     }
                     else if (receivedMessage->header.type == GET) {
+<<<<<<< HEAD
                         unsigned char *fileData;
                         long size;
                         char errorCode;
@@ -141,10 +142,22 @@ int main() {
                             char c;
                             long indexFile = 0;
                             while (indexFile < size) {
+=======
+                        int size;
+                        char res;
+                        unsigned char **data = loadFile(receivedMessage->data, &size, &res);
+
+                        int send_len;
+                        if (res == OK) {
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
+                            char c;
+                            for (int i = 0; i < size; i ++) {
+>>>>>>> d61be8a928f269571416a3c88492fef63ca1b9b9
                                 sequence = (sequence + 1) % 16;
                                 t_message *dirMsg = malloc(sizeof(t_message));
                                 dirMsg->header.marker = STARTMARKER;
                                 dirMsg->header.sequence = sequence;
+<<<<<<< HEAD
                                 dirMsg->header.type = FILEDESC;
 
                                 int j = 0;
@@ -163,6 +176,16 @@ int main() {
                                 }
 
                                 dirMsg->parity = calculateParity(dirMsg);
+=======
+                                dirMsg->header.size = sizeof(data[i]);
+                                dirMsg->header.type = FILEDESC;
+
+                                dirMsg->data = malloc(dirMsg->header.size);
+                                dirMsg->data = memcpy(dirMsg->data, data[i], sizeof(data[i]));
+
+                                dirMsg->parity = calculateParity(dirMsg);
+                                printMessage(dirMsg);
+>>>>>>> d61be8a928f269571416a3c88492fef63ca1b9b9
                                 char res = NACK;
                                 while (res == NACK) {
                                     send_len = sendMessage(mySocket, dirMsg);
@@ -178,6 +201,7 @@ int main() {
                                 printf("Erro ao enviar dados para socket.\n");
                             }
                         }
+<<<<<<< HEAD
 
                         sequence = (sequence + 1) % 16;
                     }
@@ -243,6 +267,17 @@ int main() {
                             sequence = (sequence + 1) % 16;
                         }
                     }
+=======
+                        else
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+
+                        if (send_len < 0) {
+                            printf("Erro ao enviar dados para socket.\n");
+                        }
+                        free(data);
+                        sequence = (sequence + 1) % 16;
+                    }
+>>>>>>> d61be8a928f269571416a3c88492fef63ca1b9b9
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored
                 else if (receivedMessage->header.sequence > sequence) {

@@ -8,7 +8,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <math.h>
 
 char lcd(char *dir) {
     int result = chdir(dir);
@@ -59,7 +58,6 @@ void rls(int socket, int size, char **names) {
             response = awaitServerResponse(socket, &errorCode, i);
             if (response == NACK) {
                 i = (i+1)-4;    // resend window
-                if (i<0) i=0;
             }
         }
     }
@@ -170,76 +168,35 @@ char lmkdir(char *name) {
         return OK;
 }
 
-unsigned char **loadFile(char *filename, int *blocks) {
+char **loadFile(char *filename) {
 
     FILE *fd = fopen(filename, "r");
-    if (!fd) return 0;
 
-    int i, length, max_buf_len=63;
-    fseek (fd, 0, SEEK_END);
-    length = ftell (fd);
-    fseek (fd, 0, SEEK_SET);
+    int arraySize = 1000;
+    char **fileData = malloc(arraySize*sizeof(char *));
 
-    double n_blocks = (double)length/(double)max_buf_len;
-    unsigned char **fileData = (unsigned char **)malloc(ceil(n_blocks) * sizeof(unsigned char *));
-    for(i = 0; i < ceil(n_blocks); i++) fileData[i] = (unsigned char *)malloc(max_buf_len * sizeof(unsigned char));
+    int i = 0;
+    int readSize;
 
-    int bytesRead=0, bufSize;
-    if (length < max_buf_len)
-        bufSize = length;
-    else bufSize = max_buf_len;
-    unsigned char *buffer = malloc(bufSize*sizeof(unsigned char));
+    char readData[63];
 
-    for (i=0; bytesRead < length; i++) {
-        fread(buffer, 1, bufSize, fd);
-        memcpy(fileData[i], buffer, bufSize);
-        bytesRead+=bufSize;
-        if (bytesRead+bufSize > length)
-            bufSize = length - bufSize;
-        memset(buffer, 0, max_buf_len);
-    }
+    while ((readSize = fread(readData, 1, 63, fd)) > 0) {
+        fileData[i] = malloc(readSize);
+        fileData[i] = readData;
+        i++;
 
-    *blocks = (int)ceil(n_blocks);
-    fclose (fd);
-
-    return fileData;
-}
-
-char sendFile(int socket, char *filename) {
-    int blocks;
-    unsigned char **fileData = loadFile(filename, &blocks);
-
-    char response, errorCode;
-    
-    t_message *newMessage = malloc(sizeof(t_message));
-
-    int i;
-    for (i=0; i<blocks ;i++) {    // loop each line of names
-        unsigned char data[63];
-        strcpy(data, fileData[i]);
-        newMessage->data = calloc(strlen(fileData[i]), sizeof(unsigned char));
-        newMessage->data = data;
-        newMessage->header.marker = STARTMARKER;
-        newMessage->header.type = FILEDESC;
-        newMessage->header.sequence = i;
-        newMessage->header.size = strlen(newMessage->data);
-        newMessage->parity = calculateParity(newMessage);
-        sendMessage(socket, newMessage);
-        if ((i+1) % 4 == 0) {
-            response = awaitServerResponse(socket, &errorCode, i);
-            if (response == NACK) {
-                i = (i+1)-4;    // resend window
-                if (i<0) i=0;
-            }
+        if ((i % arraySize) == 0) {
+            arraySize+=1000;
+            fileData = realloc(fileData, arraySize*sizeof(char *));
         }
     }
 
-    // end of stream
-    newMessage->header.type = END;
-    newMessage->header.sequence = i;
-    newMessage->header.size = 0;
-    newMessage->parity = 0;
-    memset(newMessage->data, 0, strlen(newMessage->data));
-    sendMessage(socket, newMessage);
+    fclose(fd);
+    return fileData;
+}
+
+char put(char *filename) {
+    char **fileData = loadFile(filename);
+
     return OK;
 }

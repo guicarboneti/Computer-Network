@@ -1,18 +1,15 @@
 # Leon e Guilherme
 
-# flags
-CFLAGS  = -lm
-
 # object-file
 objects = ConexaoRawSocket.o utils.o messages.o commands.o
 
 all: client server
 
 client: client.c $(objects)
-	gcc -g client.c -o client $(objects) $(CFLAGS)
+	gcc -g client.c -o client $(objects)
 
 server: server.c $(object)
-	gcc server.c -o server $(objects) $(CFLAGS)
+	gcc server.c -o server $(objects) 
 
 ConexaoRawSocket.o: ConexaoRawSocket.c ConexaoRawSocket.h
 	gcc ConexaoRawSocket.c -c
@@ -24,7 +21,7 @@ messages.o: messages.c messages.h
 	gcc messages.c -c
 
 commands.o: commands.c commands.h
-	gcc -g commands.c -c $(CFLAGS) 
+	gcc -g commands.c -c
 
 purge: clean
 	-rm -f client server

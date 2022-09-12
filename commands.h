@@ -20,6 +20,7 @@ void rls(int socket, int size, char **names);
 
 char lmkdir(char *name);
 
-char sendFile(int socket, char *filename);
+char put();
+
 
 #endif

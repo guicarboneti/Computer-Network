@@ -19,6 +19,7 @@
 #define FILEDESC 24
 #define DATA 32
 #define PUT 10
+#define END 46
 
 // errors
 #define DIRECTORYNOTEXISTANT 'a'
@@ -27,7 +28,6 @@
 #define ARCHIVENOTEXISTANT 'd'
 #define NOSPACE 'e'
 #define OTHER 'f'
-#define END 46
 
 typedef struct {
     unsigned char marker:8;

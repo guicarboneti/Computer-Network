@@ -57,7 +57,7 @@ int main() {
                         }
                         sequence = (sequence + 1) % 16;
                     }
-                    else if (receivedMessage->header.type = RLS) {
+                    else if (receivedMessage->header.type == RLS) {
                         char *delim = ",";
                         char *ptr = strtok(receivedMessage->data, delim);
 
@@ -116,6 +116,52 @@ int main() {
                             printf("Erro ao enviar dados para socket.\n");
                         }
                         free(names);
+                        sequence = (sequence + 1) % 16;
+                    }
+                    else if (receivedMessage->header.type == GET) {
+                        int size;
+                        char res;
+                        unsigned char **data = loadFile(receivedMessage->data, &size, &res);
+
+                        int send_len;
+                        if (res == OK) {
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
+                            char c;
+                            for (int i = 0; i < size; i ++) {
+                                sequence = (sequence + 1) % 16;
+                                t_message *dirMsg = malloc(sizeof(t_message));
+                                dirMsg->header.marker = STARTMARKER;
+                                dirMsg->header.sequence = sequence;
+                                dirMsg->header.size = sizeof(data[i]);
+                                dirMsg->header.type = FILEDESC;
+
+                                dirMsg->data = malloc(dirMsg->header.size);
+                                dirMsg->data = memcpy(dirMsg->data, data[i], sizeof(data[i]));
+
+                                dirMsg->parity = calculateParity(dirMsg);
+                                printMessage(dirMsg);
+                                char res = NACK;
+                                while (res == NACK) {
+                                    send_len = sendMessage(mySocket, dirMsg);
+                                    if(send_len < 0){
+                                        printf("Erro ao enviar dados para socket.\n");
+                                    }
+                                    res = awaitServerResponse(mySocket, &c, sequence);
+                                }
+                            }
+                            sequence = (sequence + 1) % 16;
+                            send_len = sendOkErrorResponse(mySocket, sequence, END, END);
+                            if(send_len < 0){
+                                printf("Erro ao enviar dados para socket.\n");
+                            }
+                        }
+                        else
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+
+                        if (send_len < 0) {
+                            printf("Erro ao enviar dados para socket.\n");
+                        }
+                        free(data);
                         sequence = (sequence + 1) % 16;
                     }
                 }

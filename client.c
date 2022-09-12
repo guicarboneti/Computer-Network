@@ -183,13 +183,42 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            sequence = (sequence + 1) % 16;
             if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
-                sequence = (sequence + 1) % 16;
+                switch (errorCode) {
+                case WITHOUTPERMISSION:
+                    printf("Erro: sem permissão!\n");
+                    break;
+
+                default:
+                    printf("Erro!\n");
+                    break;
+                }
             }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
+            else if (response == ACK) {
+                t_message *resMsg;
+                char serverMessageType = FILEDESC;
+                while (serverMessageType != END) {
+                    FILE *resFile = fopen(newCommand->args[0], "w");
+                    resMsg = receiveMessage(mySocket);
+                    if (resMsg != NULL) {
+                        serverMessageType = resMsg->header.type;
+                        if (serverMessageType == FILEDESC) {
+                            if (resMsg->header.sequence == sequence) {
+                                for (int i = 0; i < resMsg->header.size; i++) {
+                                    printf("%c", resMsg->data[i]);
+                                }
+                                sendOkErrorResponse(mySocket, sequence, ACK, ACK);
+                                sequence = (sequence + 1) % 16;
+                            }
+                            else if (resMsg->header.sequence > sequence) {
+                                sendOkErrorResponse(mySocket, sequence, NACK, NACK);
+                            }
+                        }
+                    }
+                    printf("\n");
+                    fclose(resFile);
+                }
                 sequence = (sequence + 1) % 16;
             }
             

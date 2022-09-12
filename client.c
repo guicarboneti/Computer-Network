@@ -114,14 +114,12 @@ int main() {
                         printf("Erro!\n");
                         break;
                     }
-                    sequence++;
+                    sequence = (sequence + 1) % 16;
                 }
                 else if (response == OK) {
                     printf("Entrou no diretório %s\n", newCommand->args[0]);
-                    sequence++;
+                    sequence = (sequence + 1) % 16;
                 }
-                else if (response == TIMEOUT)
-                    printf("Timeout! Tente novamente\n");
             }
         }
 
@@ -136,17 +134,43 @@ int main() {
                 }
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
+            sequence = (sequence + 1) % 16;
             if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
-                sequence++;
+                switch (errorCode) {
+                case DIRECTORYNOTEXISTANT:
+                    printf("Erro: diretório não existe!\n");
+                    break;
+                
+                case WITHOUTPERMISSION:
+                    printf("Erro: sem permissão!\n");
+                    break;
+
+                default:
+                    printf("Erro!\n");
+                    break;
+                }
             }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
-                sequence++;
+            else if (response == ACK) {
+                t_message *resMsg;
+                char serverMessageType = PRINT;
+                while (serverMessageType != END) {
+                    resMsg = receiveMessage(mySocket);
+                    if (resMsg != NULL) {
+                        serverMessageType = resMsg->header.type;
+                        if (serverMessageType == PRINT) {
+                            if (resMsg->header.sequence == sequence) {
+                                printf("%s\n", resMsg->data);
+                                sendOkErrorResponse(mySocket, sequence, ACK, ACK);
+                                sequence = (sequence + 1) % 16;
+                            }
+                            else if (resMsg->header.sequence > sequence) {
+                                sendOkErrorResponse(mySocket, sequence, NACK, NACK);
+                            }
+                        }
+                    }
+                }
+                sequence = (sequence + 1) % 16;
             }
-            else if (response == TIMEOUT)
-                printf("Timeout! Tente novamente\n");
         }
         else if (!strcmp(newCommand->cmd, "get")) {
             t_message *newMessage = buildMessage(newCommand, sequence, GET);
@@ -162,14 +186,13 @@ int main() {
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
-                sequence++;
+                sequence = (sequence + 1) % 16;
             }
             else if ((response == ACK) || (response == OK)) {
                 printf("Ok!\n");
-                sequence++;
+                sequence = (sequence + 1) % 16;
             }
-            else if (response == TIMEOUT)
-                printf("Timeout! Tente novamente\n");
+            
         }
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
@@ -185,14 +208,13 @@ int main() {
             if (response == ERROR) {
                 printf("Erro!");
                 // trata erro
-                sequence++;
+                sequence = (sequence + 1) % 16;
             }
             else if ((response == ACK) || (response == OK)) {
                 printf("Ok!\n");
-                sequence++;
+                sequence = (sequence + 1) % 16;
             }
-            else if (response == TIMEOUT)
-                printf("Timeout! Tente novamente\n");
+            
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             if (newCommand->numArgs > 0) {
@@ -241,14 +263,13 @@ int main() {
                     printf("Erro!\n");
                     break;
                 }
-                sequence++;
+                sequence = (sequence + 1) % 16;
             }
             else if (response == OK) {
                 printf("Diretório foi criado com sucesso.\n");
-                sequence++;
+                sequence = (sequence + 1) % 16;
             }
-            else if (response == TIMEOUT)
-                printf("Timeout! Tente novamente\n");
+            
         }
         else {
             printf("Erro: comando desconhecido!\n");

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include<sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "ConexaoRawSocket.h"
 
@@ -57,7 +58,7 @@ int main() {
                         }
                         sequence = (sequence + 1) % 16;
                     }
-                    else if (receivedMessage->header.type = RLS) {
+                    else if (receivedMessage->header.type == RLS) {
                         char *delim = ",";
                         char *ptr = strtok(receivedMessage->data, delim);
 
@@ -117,6 +118,130 @@ int main() {
                         }
                         free(names);
                         sequence = (sequence + 1) % 16;
+                    }
+                    else if (receivedMessage->header.type == GET) {
+                        unsigned char *fileData;
+                        long size;
+                        char errorCode;
+
+                        char res = loadFile(receivedMessage->data, &size, &fileData, &errorCode);
+                        int send_len;
+
+                        if (res == ERROR) {
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ERROR, res);
+                            if (send_len < 0) {
+                                printf("Erro ao enviar dados para socket.\n");
+                            }
+                        }                        
+                        else {
+                            send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
+                            if (send_len < 0) {
+                                printf("Erro ao enviar dados para socket.\n");
+                            }
+                            char c;
+                            long indexFile = 0;
+                            while (indexFile < size) {
+                                sequence = (sequence + 1) % 16;
+                                t_message *dirMsg = malloc(sizeof(t_message));
+                                dirMsg->header.marker = STARTMARKER;
+                                dirMsg->header.sequence = sequence;
+                                dirMsg->header.type = FILEDESC;
+
+                                int j = 0;
+                                char messageData[63];
+                                while ((indexFile < size) && (j < 63)) {
+                                    messageData[j] = fileData[indexFile];
+                                    j++;
+                                    indexFile++;
+                                }
+
+                                dirMsg->header.size = j * sizeof(unsigned char);
+                                dirMsg->data = malloc(j * sizeof(unsigned char));
+                                
+                                for (int k = 0; k < j; k++) {
+                                    dirMsg->data[k] = messageData[k];
+                                }
+
+                                dirMsg->parity = calculateParity(dirMsg);
+                                char res = NACK;
+                                while (res == NACK) {
+                                    send_len = sendMessage(mySocket, dirMsg);
+                                    if(send_len < 0){
+                                        printf("Erro ao enviar dados para socket.\n");
+                                    }
+                                    res = awaitServerResponse(mySocket, &c, sequence);
+                                }
+                            }
+                            sequence = (sequence + 1) % 16;
+                            send_len = sendOkErrorResponse(mySocket, sequence, END, END);
+                            if(send_len < 0){
+                                printf("Erro ao enviar dados para socket.\n");
+                            }
+                        }
+
+                        sequence = (sequence + 1) % 16;
+                    }
+                    else if (receivedMessage->header.type == PUT) {
+                        FILE *f = fopen(receivedMessage->data, "wb");
+                        int send_len;
+                        if (!f) {
+                            switch (errno) {
+                            case ENOMEM:
+                                send_len = sendOkErrorResponse(mySocket, sequence, ERROR, NOSPACE);
+                                if(send_len < 0){
+                                    printf("Erro ao enviar dados para socket.\n");
+                                }
+                                break;
+
+                            case ENOSPC:
+                                send_len = sendOkErrorResponse(mySocket, sequence, ERROR, NOSPACE);
+                                if(send_len < 0){
+                                    printf("Erro ao enviar dados para socket.\n");
+                                }
+                                break;
+
+                            case EACCES:
+                                send_len = sendOkErrorResponse(mySocket, sequence, ERROR, WITHOUTPERMISSION);
+                                if(send_len < 0){
+                                    printf("Erro ao enviar dados para socket.\n");
+                                }
+                                break;
+                            
+                            default:
+                                send_len = sendOkErrorResponse(mySocket, sequence, ERROR, OTHER);
+                                if(send_len < 0){
+                                    printf("Erro ao enviar dados para socket.\n");
+                                }
+                                break;
+                            }
+                        }
+                        else {
+                            sendOkErrorResponse(mySocket, sequence, OK, OK);
+                            t_message *resMsg;
+                            char serverMessageType = FILEDESC;
+                            sequence = (sequence + 1) % 16;
+                            while (serverMessageType != END) {
+                                resMsg = receiveMessage(mySocket);
+                                if (resMsg != NULL) {
+                                    serverMessageType = resMsg->header.type;
+                                    if (serverMessageType == FILEDESC) {
+                                        if (resMsg->header.sequence == sequence) {
+                                            for (int i = 0; i < resMsg->header.size; i++) {
+                                                fprintf(f, "%c", resMsg->data[i]);
+                                            }
+                                            sendOkErrorResponse(mySocket, sequence, ACK, ACK);
+                                            sequence = (sequence + 1) % 16;
+                                        }
+                                        else if (resMsg->header.sequence > sequence) {
+                                            sendOkErrorResponse(mySocket, sequence, NACK, NACK);
+                                        }
+                                    }
+                                }
+                            }
+                            fclose(f);
+                            printf("Arquivo recebido com sucesso.\n");
+                            sequence = (sequence + 1) % 16;
+                        }
                     }
                 }
                 // if header's sequence is smaller than sequence, it means it's a doubly and can be ignored

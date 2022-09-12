@@ -175,24 +175,75 @@ int main() {
         else if (!strcmp(newCommand->cmd, "get")) {
             t_message *newMessage = buildMessage(newCommand, sequence, GET);
 
-            char response = NACK;
-            while (response == NACK) {
-                int send_len = sendMessage(mySocket, newMessage);
-                if(send_len < 0){
-                    printf("Erro ao enviar dados para socket.\n");
+            FILE *f = fopen(newCommand->args[0], "wb");
+            if (!f) {
+                switch (errno) {
+                case ENOMEM:
+                    printf("Erro: sem espaço!\n");
+                    break;
+
+                case ENOSPC:
+                    printf("Erro: sem espaço\n");
+                    break;
+
+                case EACCES:
+                    printf("Erro: sem permissão.\n");
+                    break;
+                
+                default:
+                    break;
                 }
-                response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
-            if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
-                sequence = (sequence + 1) % 16;
+            else {
+                char response = NACK;
+                while (response == NACK) {
+                    int send_len = sendMessage(mySocket, newMessage);
+                    if(send_len < 0){
+                        printf("Erro ao enviar dados para socket.\n");
+                    }
+                    response = awaitServerResponse(mySocket, &errorCode, sequence);
+                }
+                if (response == ERROR) {
+                    switch(errorCode) {
+                        case ARCHIVENOTEXISTANT:
+                            printf("Erro: arquivo não existe!\n");
+                            break;
+                        case WITHOUTPERMISSION:
+                            printf("Erro: sem permissão!\n");
+                            break;
+                        default:
+                            printf("Erro!");
+                            break;
+                    }
+                    sequence = (sequence + 1) % 16;
+                }
+                else if (response == ACK) {
+                    t_message *resMsg;
+                    char serverMessageType = FILEDESC;
+                    sequence = (sequence + 1) % 16;
+                    while (serverMessageType != END) {
+                        resMsg = receiveMessage(mySocket);
+                        if (resMsg != NULL) {
+                            serverMessageType = resMsg->header.type;
+                            if (serverMessageType == FILEDESC) {
+                                if (resMsg->header.sequence == sequence) {
+                                    for (int i = 0; i < resMsg->header.size; i++) {
+                                        fprintf(f, "%c", resMsg->data[i]);
+                                    }
+                                    sendOkErrorResponse(mySocket, sequence, ACK, ACK);
+                                    sequence = (sequence + 1) % 16;
+                                }
+                                else if (resMsg->header.sequence > sequence) {
+                                    sendOkErrorResponse(mySocket, sequence, NACK, NACK);
+                                }
+                            }
+                        }
+                    }
+                    fclose(f);
+                    printf("Arquivo recebido com sucesso.\n");
+                    sequence = (sequence + 1) % 16;
+                }
             }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
-                sequence = (sequence + 1) % 16;
-            }
-            
         }
         else if (!strcmp(newCommand->cmd, "put")) {
             t_message *newMessage = buildMessage(newCommand, sequence, PUT);
@@ -206,15 +257,82 @@ int main() {
                 response = awaitServerResponse(mySocket, &errorCode, sequence);
             }
             if (response == ERROR) {
-                printf("Erro!");
-                // trata erro
+                switch (errorCode) {
+                case NOSPACE:
+                    printf("Erro: sem espaço!\n");
+                    break;
+                case WITHOUTPERMISSION:
+                    printf("Erro: sem permissão!\n");
+                    break;
+                default:
+                    printf("Erro!");
+                    break;
+                }
                 sequence = (sequence + 1) % 16;
             }
-            else if ((response == ACK) || (response == OK)) {
-                printf("Ok!\n");
+            else if (response == OK) {
+                long size;
+                unsigned char *fileData;
+                char res = loadFile(newCommand->args[0], &size, &fileData, &errorCode);
+                int send_len;
+
+                if (res == OK) {
+                    char c;
+                    long indexFile = 0;
+                    while (indexFile < size) {
+                        sequence = (sequence + 1) % 16;
+                        t_message *dirMsg = malloc(sizeof(t_message));
+                        dirMsg->header.marker = STARTMARKER;
+                        dirMsg->header.sequence = sequence;
+                        dirMsg->header.type = FILEDESC;
+
+                        int j = 0;
+                        char messageData[63];
+                        while ((indexFile < size) && (j < 63)) {
+                            messageData[j] = fileData[indexFile];
+                            j++;
+                            indexFile++;
+                        }
+
+                        dirMsg->header.size = j * sizeof(unsigned char);
+                        dirMsg->data = malloc(j * sizeof(unsigned char));
+                        
+                        for (int k = 0; k < j; k++) {
+                            dirMsg->data[k] = messageData[k];
+                        }
+
+                        dirMsg->parity = calculateParity(dirMsg);
+                        char res = NACK;
+                        while (res == NACK) {
+                            send_len = sendMessage(mySocket, dirMsg);
+                            if(send_len < 0){
+                                printf("Erro ao enviar dados para socket.\n");
+                            }
+                            res = awaitServerResponse(mySocket, &c, sequence);
+                        }
+                    }
+                    printf("Arquivo enviado com sucesso!\n");
+                }
+                else {
+                    switch (errorCode) {
+                    case WITHOUTPERMISSION:
+                        printf("Erro: sem permissão.\n");
+                        break;
+                    case ENOENT:
+                        printf("Erro: arquivo não existe.\n");
+                        break;
+                    default:
+                        printf("Erro!\n");
+                        break;
+                    }
+                }
+                sequence = (sequence + 1) % 16;
+                send_len = sendOkErrorResponse(mySocket, sequence, END, END);
+                if(send_len < 0){
+                    printf("Erro ao enviar dados para socket.\n");
+                }
                 sequence = (sequence + 1) % 16;
             }
-            
         }
         else if (!strcmp(newCommand->cmd, "lmkdir")) {
             if (newCommand->numArgs > 0) {

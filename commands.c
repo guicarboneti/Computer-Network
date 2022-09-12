@@ -127,3 +127,35 @@ char lmkdir(char *name) {
     else 
         return OK;
 }
+
+char loadFile(char *fileName, long *size, unsigned char **fileData, char *errorCode) {
+    FILE *f = fopen(fileName, "rb");
+
+    if (!f) {
+        switch(errno) {
+            case EACCES:
+                return WITHOUTPERMISSION;
+                break;
+            case ENOENT:
+                return ARCHIVENOTEXISTANT;
+                break;
+            default:
+                return OTHER;
+                break;
+        }
+        return ERROR;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+
+    char *string = malloc(fsize);
+    fread(string, fsize, 1, f);
+    fclose(f);
+
+    *size = fsize;
+    *fileData = string;    
+
+    return OK;
+}

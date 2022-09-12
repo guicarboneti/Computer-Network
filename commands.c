@@ -149,7 +149,7 @@ char loadFile(char *fileName, long *size, unsigned char **fileData, char *errorC
 
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+    fseek(f, 0, SEEK_SET);
 
     char *string = malloc(fsize);
     fread(string, fsize, 1, f);

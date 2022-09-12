@@ -225,14 +225,15 @@ int main() {
                                 if (resMsg != NULL) {
                                     serverMessageType = resMsg->header.type;
                                     if (serverMessageType == FILEDESC) {
-                                        if (resMsg->header.sequence == sequence) {
+                                        char calc_parity = calculateParity(resMsg);
+                                        if ((resMsg->header.sequence == sequence) && (compareParity(calc_parity, resMsg->parity))) {
                                             for (int i = 0; i < resMsg->header.size; i++) {
                                                 fprintf(f, "%c", resMsg->data[i]);
                                             }
                                             sendOkErrorResponse(mySocket, sequence, ACK, ACK);
                                             sequence = (sequence + 1) % 16;
                                         }
-                                        else if (resMsg->header.sequence > sequence) {
+                                        else if ((resMsg->header.sequence > sequence) || (!compareParity(calc_parity, resMsg->parity))) {
                                             sendOkErrorResponse(mySocket, sequence, NACK, NACK);
                                         }
                                     }

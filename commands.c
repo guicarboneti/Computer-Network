@@ -129,7 +129,6 @@ char lmkdir(char *name) {
         return OK;
 }
 
-<<<<<<< HEAD
 char loadFile(char *fileName, long *size, unsigned char **fileData, char *errorCode) {
     FILE *f = fopen(fileName, "rb");
 
@@ -160,53 +159,4 @@ char loadFile(char *fileName, long *size, unsigned char **fileData, char *errorC
     *fileData = string;    
 
     return OK;
-=======
-unsigned char **loadFile(char *filename, int *blocks, char *res) {
-
-    FILE *fd = fopen(filename, "r");
-    if (!fd) {
-        switch (errno) {
-        case EACCES:
-            *res = WITHOUTPERMISSION;
-            break;
-        
-        default:
-            *res = OTHER;
-            break;
-        }
-        return 0;
-    }
-
-    int i, length, max_buf_len=63;
-    fseek (fd, 0, SEEK_END);
-    length = ftell (fd);
-    fseek (fd, 0, SEEK_SET);
-
-    double n_blocks = (double)length/(double)max_buf_len;
-    unsigned char **fileData = (unsigned char **)malloc(ceil(n_blocks) * sizeof(unsigned char *));
-    for(i = 0; i < ceil(n_blocks); i++)
-        fileData[i] = (unsigned char *)malloc(max_buf_len * sizeof(unsigned char));
-
-    int bytesRead=0, bufSize;
-    if (length < max_buf_len)
-        bufSize = length;
-    else bufSize = max_buf_len;
-    unsigned char *buffer = malloc(bufSize*sizeof(unsigned char));
-
-    for (i=0; bytesRead < length; i++) {
-        fread(buffer, 1, bufSize, fd);
-        memcpy(fileData[i], buffer, bufSize);
-        bytesRead+=bufSize;
-        if (bytesRead+bufSize > length) {
-            bufSize = length - bufSize;
-            memset(buffer, 0, max_buf_len);
-        }
-    }
-
-    *blocks = (int)ceil(n_blocks);
-    fclose (fd);
-
-    *res = OK;
-    return fileData;
->>>>>>> d61be8a928f269571416a3c88492fef63ca1b9b9
 }

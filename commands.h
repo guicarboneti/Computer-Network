@@ -18,4 +18,6 @@ char lls(char *arg, int *size, char ***names);
 
 char lmkdir(char *name);
 
+char loadFile(char *fileName, long *size, unsigned char **fileData, char *errorCode);
+
 #endif

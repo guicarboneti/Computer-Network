@@ -31,6 +31,7 @@ int main() {
 
 
     while (1) {
+        printf("> ");
         scanf("%[^\n]%c", command, &c);
         t_command *newCommand = buildCommand(command);
 

@@ -29,9 +29,10 @@ int main() {
     int sequence = 0;
     printf("Enviando...\n");
 
-
+    char dir[60];
     while (1) {
-        printf("> ");
+        getcwd(dir,60);
+        printf("%s> ",dir);
         scanf("%[^\n]%c", command, &c);
         t_command *newCommand = buildCommand(command);
 
@@ -282,7 +283,12 @@ int main() {
                 if (res == OK) {
                     char c;
                     long indexFile = 0;
-                    while (indexFile < size) {
+                    int i, idx_window_start, seq_window_start;
+                    for (i=0; indexFile < size; i++) {
+                        if (i%4 == 0) {
+                            idx_window_start = indexFile;
+                            seq_window_start = sequence;
+                        }
                         sequence = (sequence + 1) % 16;
                         t_message *dirMsg = malloc(sizeof(t_message));
                         dirMsg->header.marker = STARTMARKER;
@@ -305,13 +311,14 @@ int main() {
                         }
 
                         dirMsg->parity = calculateParity(dirMsg);
-                        char res = NACK;
-                        while (res == NACK) {
-                            send_len = sendMessage(mySocket, dirMsg);
-                            if(send_len < 0){
-                                printf("Erro ao enviar dados para socket.\n");
-                            }
-                            res = awaitServerResponse(mySocket, &c, sequence);
+                        send_len = sendMessage(mySocket, dirMsg);
+                        if(send_len < 0){
+                            printf("Erro ao enviar dados para socket.\n");
+                        }
+                        res = awaitServerResponse(mySocket, &c, sequence);
+                        if (res == NACK) {
+                            sequence = seq_window_start;
+                            indexFile = idx_window_start;
                         }
                     }
                     printf("Arquivo enviado com sucesso!\n");

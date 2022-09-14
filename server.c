@@ -80,7 +80,10 @@ int main() {
                         if (res == OK) {
                             send_len = sendOkErrorResponse(mySocket, receivedMessage->header.sequence, ACK, res);
                             char c;
+                            int seq_start_window;
                             for (int i = 0; i < size; i ++) {
+                                if (i%4 == 0)
+                                    seq_start_window = sequence;
                                 sequence = (sequence + 1) % 16;
                                 t_message *dirMsg = malloc(sizeof(t_message));
                                 dirMsg->header.marker = STARTMARKER;
@@ -95,23 +98,15 @@ int main() {
                                 dirMsg->data[j] = '\0';
 
                                 dirMsg->parity = calculateParity(dirMsg);
-                                char res = NACK;
-                                while (res == NACK) {
-                                    send_len = sendMessage(mySocket, dirMsg);
-                                    if(send_len < 0){
-                                        printf("Erro ao enviar dados para socket.\n");
-                                    }
-                                    res = awaitServerResponse(mySocket, &c, sequence);
+                                send_len = sendMessage(mySocket, dirMsg);
+                                if(send_len < 0){
+                                    printf("Erro ao enviar dados para socket.\n");
                                 }
-                                // send_len = sendMessage(mySocket, dirMsg);
-                                // if(send_len < 0){
-                                //     printf("Erro ao enviar dados para socket.\n");
-                                // }
-                                // res = awaitServerResponse(mySocket, &c, sequence);
-                                // if (res == NACK) {
-                                //     sequence -= i % 4;
-                                //     i -= i % 4;
-                                // }
+                                char res = awaitServerResponse(mySocket, &c, sequence);
+                                if (res == NACK) {
+                                    // sequence = seq_start_window;
+                                    i -= i % 4;
+                                }
                             }
                             sequence = (sequence + 1) % 16;
                             send_len = sendOkErrorResponse(mySocket, sequence, END, END);
@@ -153,7 +148,7 @@ int main() {
                             for (i=0; indexFile < size; i++) {
                                 if (i%4 == 0) {
                                     idx_window_start = indexFile;
-                                    seq_window_start = sequence;
+                                    // seq_window_start = sequence;
                                 }
                                 sequence = (sequence + 1) % 16;
                                 t_message *dirMsg = malloc(sizeof(t_message));
@@ -181,9 +176,9 @@ int main() {
                                 if(send_len < 0){
                                     printf("Erro ao enviar dados para socket.\n");
                                 }
-                                res = awaitServerResponse(mySocket, &c, sequence);
+                                char res = awaitServerResponse(mySocket, &c, sequence);
                                 if (res == NACK) {
-                                    sequence = seq_window_start;
+                                    // sequence = seq_window_start;
                                     indexFile = idx_window_start;
                                 }
                             }

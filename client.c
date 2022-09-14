@@ -287,7 +287,7 @@ int main() {
                     for (i=0; indexFile < size; i++) {
                         if (i%4 == 0) {
                             idx_window_start = indexFile;
-                            seq_window_start = sequence;
+                            // seq_window_start = sequence;
                         }
                         sequence = (sequence + 1) % 16;
                         t_message *dirMsg = malloc(sizeof(t_message));
@@ -315,9 +315,9 @@ int main() {
                         if(send_len < 0){
                             printf("Erro ao enviar dados para socket.\n");
                         }
-                        res = awaitServerResponse(mySocket, &c, sequence);
+                        char res = awaitServerResponse(mySocket, &c, sequence);
                         if (res == NACK) {
-                            sequence = seq_window_start;
+                            // sequence = seq_window_start;
                             indexFile = idx_window_start;
                         }
                     }
